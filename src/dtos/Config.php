@@ -21,14 +21,14 @@ class Config {
         if (property_exists($cnf, 'inputFormat')) {
             $in = $cnf->inputFormat;
         } else {
-            header("HTTP/1.1 400 Bad Input");
+            http_response_code(400);
             exit();
         }
 
         if (property_exists($cnf, 'outputFormat')) {
             $out = $cnf->outputFormat;
         } else {
-            header("HTTP/1.1 400 Bad Input");
+            http_response_code(400);
             exit();
         }
 

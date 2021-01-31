@@ -24,7 +24,7 @@ if ($uri[1] == 'api') {
     $controller->handleRequest();
     exit();
 } else {
-    echo "<script>location.href='converter.html';</script>";
+    header("Location: register.php");
     exit();
 }
 

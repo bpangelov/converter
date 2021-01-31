@@ -60,8 +60,8 @@ class ConverterController {
                 $response = $this->delete($this->id);
                 break;
             default:
-                $response = $this->notFound();
-                break;
+                http_response_code(404);
+                exit();
         }
         header($response['status_code_header']);
         if ($response['body']) {
@@ -107,12 +107,6 @@ class ConverterController {
     private function delete() {
         $response['status_code_header'] = 'HTTP/1.1 200 OK';
         $response['body'] = json_encode(array("DELETE" => "delete called"));
-        return $response;
-    }
-
-    private function notFoundResponse() {
-        $response['status_code_header'] = 'HTTP/1.1 404 Not Found';
-        $response['body'] = null;
         return $response;
     }
 }
