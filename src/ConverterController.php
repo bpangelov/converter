@@ -87,14 +87,14 @@ class ConverterController {
 
         $parserFactory = new ParserFactory();
         $parser = $parserFactory->createParser($requestDto->getConfig());
-        $resp = $parser->parse($requestDto->getInputFile());
+        $result = $parser->parse($requestDto->getInputFile());
 
         $conveterFactory = new ConverterFactory();
         $converter = $conveterFactory->createConverter($requestDto->getConfig());
-        $resp = $converter->convert($resp);
+        $resultBody = $converter->convert($result);
 
         $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode(array("message" => $resp));
+        $response['body'] = json_encode(array("convertedFile" => $resultBody));
         return $response;
     }
 

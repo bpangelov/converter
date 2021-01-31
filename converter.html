@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+Config:<br>
+<form id="config">
+    <label for="config_input">Input type:</label>
+    <select id="config_input" name="config_input">
+        <option value="json">json</option>
+        <option value="yaml">yaml</option>
+    </select>
+    <label for="config_output">Output type:</label>
+    <select id="config_output" name="config_output">
+        <option value="json">json</option>
+        <option value="yaml">yaml</option>
+    </select>
+</form>
+
+
+File:<br>
+<textarea id="textarea_input" rows="20" cols="70">
+</textarea><br>
+
+<textarea id="textarea_output" rows="20" cols="70">
+</textarea><br>
+
+<button type="button" onclick="submit()">submit</button>
+
+<script>
+var API_URL = "http://localhost/converter/api";
+
+function submit() {
+
+    let input = document.getElementById("textarea_input").value;
+    let apiRequest = {
+        "config": {
+            "inputFormat":document.getElementById("config_input").value,
+		    "outputFormat":document.getElementById("config_output").value
+        },
+        "inputFile":input
+    };
+
+    fetch(API_URL, {
+        method: "POST", 
+        body: JSON.stringify(apiRequest)
+    })
+    .then(response => response.json())
+    .then(response => {
+        document.getElementById("textarea_output").value = response.convertedFile;
+    });
+}
+</script>
+
+</body>
+</html>

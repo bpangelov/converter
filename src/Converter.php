@@ -15,9 +15,33 @@ class JsonConverter extends Converter {
         parent::__construct($config);
     }
 
-    public function convert($input) {
-        return $input . "| This is JsonConverter"; 
+    private function formatString($str) {
+        $result = "";
+        $tabulation = "   ";
+        $tabulationCount = 0;
+        for ($i = 0; $i < strlen($str); $i++) {
+            if ($str[$i] == '}') {
+                $tabulationCount--;
+                $result .= "\n" . str_repeat($tabulation, $tabulationCount) . '}';
+            } else {
+                $result .= $str[$i];
+                if ($str[$i] == '{') {
+                    $tabulationCount++;
+                    $result .= "\n" . str_repeat($tabulation, $tabulationCount);
+                } else if ($str[$i] == ',' && $str[$i + 1] == '"') {
+                    $result .= "\n" . str_repeat($tabulation, $tabulationCount);
+                }
+            }
+        }
+        return $result;
     }
+
+    public function convert($input) {
+        $jsonString = json_encode($input);
+        $formated = $this->formatString($jsonString);
+        //echo $formated;
+        return  $formated;
+    } 
 }
 
 class YamlConverter extends Converter {
@@ -26,7 +50,8 @@ class YamlConverter extends Converter {
     }
 
     public function convert($input) {
-        return $input . "| This is YamlConverter";
+        $yamlString = yaml_emit($input);
+        return $yamlString;
     }
 }
 
@@ -41,7 +66,7 @@ class ConverterFactory {
             case 'yaml':
                 return new YamlConverter($config);
             default:
-                header("HTTP/1.1 400 Bad Input");
+                http_response_code(400);
                 exit();
         }
     }

@@ -10,20 +10,26 @@ abstract class Parser {
 class JsonParser extends Parser {
 
     public function parse($inputFile) {
-        $jsonDecoded = json_decode($inputFile);
+        $jsonDecoded = json_decode($inputFile, true);
         if ($jsonDecoded == null) {
-            header("HTTP/1.1 400 Bad Input");
+            http_response_code(400);
             exit();
         }
 
-        return "This is JsonParser |" . $inputFile;
+        return $jsonDecoded;
     }
 }
 
 class YamlParser extends Parser {
 
     public function parse($inputFile) {
-        return "This is YamlParser |" . $inputFile;
+        $yamlDecoded = yaml_parse($inputFile);
+        if ($yamlDecoded == null) {
+            http_response_code(400);
+            exit();
+        }
+
+        return $yamlDecoded;
     }
 }
 
@@ -38,7 +44,7 @@ class ParserFactory {
             case 'yaml':
                 return new YamlParser();
             default:
-                header("HTTP/1.1 400 Bad Input");
+                http_response_code(400);
                 exit();
         }
     }
