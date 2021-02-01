@@ -13,7 +13,11 @@ Config:<br>
     <select id="config_output" name="config_output">
         <option value="json">json</option>
         <option value="yaml">yaml</option>
-    </select>
+    </select><br>
+    <label for="transformation_name">Name of transformation:</label>
+    <input id="transformation_name"/><br>
+    <label for="tabulation">Count of spaces for tabulation:</label>
+    <input type="number" id="tabulation" name="quantity" min="1"><br>
 </form>
 
 
@@ -34,8 +38,10 @@ function submit() {
     let input = document.getElementById("textarea_input").value;
     let apiRequest = {
         "config": {
+            "name":document.getElementById("transformation_name").value,
             "inputFormat":document.getElementById("config_input").value,
-		    "outputFormat":document.getElementById("config_output").value
+            "outputFormat":document.getElementById("config_output").value,
+            "tabulation":document.getElementById("tabulation").value
         },
         "inputFile":input
     };

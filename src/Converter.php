@@ -1,7 +1,7 @@
 <?php
 
 abstract class Converter {
-    private $config;
+    protected $config;
 
     public function __construct($config) {
         $this->config = $config;
@@ -17,7 +17,7 @@ class JsonConverter extends Converter {
 
     private function formatString($str) {
         $result = "";
-        $tabulation = "   ";
+        $tabulation = str_repeat(" ", $this->config->getTabulation());
         $tabulationCount = 0;
         for ($i = 0; $i < strlen($str); $i++) {
             if ($str[$i] == '}') {
