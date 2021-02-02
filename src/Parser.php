@@ -13,7 +13,7 @@ class JsonParser extends Parser {
         $jsonDecoded = json_decode($inputFile, true);
         if ($jsonDecoded == null) {
             http_response_code(400);
-            exit();
+            exit("Input is not valid json");
         }
 
         return $jsonDecoded;
@@ -26,7 +26,7 @@ class YamlParser extends Parser {
         $yamlDecoded = yaml_parse($inputFile);
         if ($yamlDecoded == null) {
             http_response_code(400);
-            exit();
+            exit("Input is not valid yaml");
         }
 
         return $yamlDecoded;
@@ -45,7 +45,7 @@ class ParserFactory {
                 return new YamlParser();
             default:
                 http_response_code(400);
-                exit();
+                exit("Unknown format");
         }
     }
 }

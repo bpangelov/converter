@@ -112,7 +112,7 @@ class ConverterFactory {
                 return new YamlConverter($config);
             default:
                 http_response_code(400);
-                exit();
+                exit("Unknown output format");
         }
     }
 }

@@ -169,33 +169,37 @@ class ConverterController {
         }
 
         if ($requestDto->saveTransformation()) {
+            session_start();
+            if (isset($_SESSION["id"])) {
+                $userID = $_SESSION["id"];
+            } else {
+                http_response_code(401);
+                exit("user is not logged in");
+            }
+
+            // Save config in db
+            $db = new DB();
+            $configRepo = new ConfigRepository($db->getConnection());
+            $config = $configRepo->save($requestDto->getConfig(), $userID);
+
             // Save to file, keep original file
             $inputFileName = $requestDto->getFileName() . "_" . 
-                                $requestDto->getConfig()->getId() . "_original" . "." . 
-                                $requestDto->getConfig()->getInputFormat();
+                                $config->getId() . "_original" . "." . 
+                                $config->getInputFormat();
             $outputFileName = $requestDto->getFileName() . "_" . 
-                        $requestDto->getConfig()->getId() . "." . 
-                        $requestDto->getConfig()->getOutputFormat();
+                                $config->getId() . "." . 
+                                $config->getOutputFormat();
+
+            $transformationRepo = new TransformationRepository($db->getConnection());
+            $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
+
             $filePath = FILE_PATH . $outputFileName;
             $filePathOriginal = FILE_PATH . $inputFileName;
 
             FileUtil::write($filePath, $resultBody);
             FileUtil::write($filePathOriginal, $requestDto->getInputFileContent());
-
-            // Save config in db
-            $db = new DB();
-            $configRepo = new ConfigRepository($db->getConnection());
-            $configRepo->save($requestDto->getConfig());
-
-            session_start();
-            if (isset($_SESSION["id"])) {
-                $userID = $_SESSION["id"];
-            }
-
-            $transformationRepo = new TransformationRepository($db->getConnection());
-            $transformationRepo->save($userID, $requestDto->getConfig(), $requestDto->getFileName(), $outputFileName, $inputFileName);
         }
-
+        
         http_response_code(201);
         header('Content-Type: application/json');
         $response['body'] = json_encode(array("convertedFile" => $resultBody));

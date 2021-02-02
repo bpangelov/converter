@@ -7,8 +7,10 @@ class Config {
     private $outputFormat;
     private $tabulation;
 
-    public function __construct($in, $out, $name = "", $tabulation = 3) {
-        $this->id = uniqid();
+    public function __construct($in, $out, $name = "", $tabulation = 3, $id = null) {
+        if ($id == null) {
+            $this->id = uniqid();
+        }
         $this->inputFormat = $in;
         $this->outputFormat = $out;
         $this->tabulation = $tabulation;
@@ -61,6 +63,10 @@ class Config {
         }
 
         return new Config($in, $out, $name, $tabulation);
+    }
+
+    public static function fromMap($map) {
+        return new Config($map["inputFormat"], $map["outputFormat"], $map["name"], $map["tabulation"], $map["id"]);
     }
 }
 

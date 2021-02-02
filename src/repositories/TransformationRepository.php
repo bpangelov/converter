@@ -28,6 +28,7 @@ class TransformationRepository {
             ));
             return $statement->rowCount();
         } catch (PDOException $e) {
+            http_response_code(500);
             exit($e->getMessage());
         }  
     }
@@ -52,6 +53,7 @@ class TransformationRepository {
             }
             return $arr;
         } catch (PDOException $e) {
+            http_response_code(500);
             exit($e->getMessage());
         }
     }
@@ -69,6 +71,7 @@ class TransformationRepository {
                 "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
                 "outputFileName" => $row["output_file_name"]);
         } catch (PDOException $e) {
+            http_response_code(500);
             exit($e->getMessage());
         } 
     }

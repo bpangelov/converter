@@ -75,7 +75,9 @@ function refreshHistory() {
                 div.appendChild(anchor);
                 div.appendChild(document.createElement("br"));
             })
-        })
+        }).catch(function(err) {
+            console.log('Fetch Error :-S', err);
+        });
 }
 
 function getTransformation(id) {
@@ -91,6 +93,8 @@ function getTransformation(id) {
             document.getElementById("textarea_input").value = data.originalFile;
             document.getElementById("textarea_output").value = data.convertedFile;
             document.getElementById('if_save').style.visibility = 'visible';
+        }).catch(function(err) {
+            console.log('Fetch Error :-S', err);
         });
 }
 
@@ -109,11 +113,20 @@ function submit() {
 
     fetch(API_URL, {
         method: "POST", 
-        body: JSON.stringify(apiRequest)
+        body: JSON.stringify(apiRequest),
+        headers : { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        return response.json();
+    })
     .then(response => {
         document.getElementById("textarea_output").value = response.convertedFile;
+    })
+    .catch(function(err) {
+        console.log('Fetch Error :-S', err);
     });
 }
 
