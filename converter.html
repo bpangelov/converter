@@ -41,7 +41,11 @@ History:
 
 </div>
 
-<button type="button" onclick="refreshHistory()">refresh</button>
+<button type="button" onclick="refreshHistory()">refresh</button><br><br>
+
+Shared:
+
+<div id="shared"></div>
 
 <script>
 var API_URL = "http://localhost/converter/api/transformations";
@@ -57,6 +61,17 @@ function refreshHistory() {
                 anchor.href = "#";
                 anchor.innerHTML = "config: " + hist.configName + " file: " + hist.fileName;
                 anchor.onclick = function() { getTransformation(hist.id) };
+                div.appendChild(anchor);
+                div.appendChild(document.createElement("br"));
+            })
+            div = document.getElementById("shared");
+            div.innerHTML = '';
+            data.sharedEntries.forEach(entry => {
+                console.log(entry)
+                let anchor = document.createElement('a');
+                anchor.href = "#";
+                anchor.innerHTML = "config: " + entry.configName + " file: " + entry.fileName;
+                anchor.onclick = function() { getTransformation(entry.transformationID) };
                 div.appendChild(anchor);
                 div.appendChild(document.createElement("br"));
             })

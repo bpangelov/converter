@@ -7,6 +7,7 @@ require_once "./src/db.php";
 require_once "./src/FileUtil.php";
 require_once "./src/repositories/ConfigRepository.php";
 require_once "./src/repositories/TransformationRepository.php";
+require_once "./src/repositories/SharesRepository.php";
 
 define("FILE_PATH", "./files/");
 
@@ -99,6 +100,14 @@ class ConverterController {
     }
 
     private function getSingle($transformationId) {
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            http_response_code(403);
+            exit();
+        }
+
         $db = new DB();
         // Get transformation
         $transformationRepo = new TransformationRepository($db->getConnection());
@@ -125,16 +134,21 @@ class ConverterController {
         if (isset($_SESSION["id"])) {
             $userID = $_SESSION["id"];
         } else {
-            exit("user is not logged in");
+            http_response_code(403);
+            exit();
         }
 
         $db = new DB();
         $transformationRepo = new TransformationRepository($db->getConnection());
         $historyEntries = $transformationRepo->getForUser($userID);
 
+        $sharesRepo = new SharesRepository($db->getConnection());
+        $sharedEntries = $sharesRepo->getSharedTransformations($userID);
+
         http_response_code(200);
         header('Content-Type: application/json');
-        $response['body'] = json_encode(array("historyEntries" => $historyEntries));
+        $response['body'] = json_encode(array("historyEntries" => $historyEntries,
+            "sharedEntries" => $sharedEntries));
         return $response;
     }
 

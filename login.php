@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Validate credentials
     if (empty($usernameErr) && empty($passwordErr)) {
-        $user = $userRepository->getUser($username);
+        $user = $userRepository->getUser($username, true);
 
         if (!$user) {
             $usernameErr = "Потребителското име не съществува.";

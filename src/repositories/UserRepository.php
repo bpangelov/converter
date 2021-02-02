@@ -19,8 +19,12 @@ class UserRepository {
         } 
     }
 
-    public function getUser($username) {
-        $query = "SELECT id, username, password FROM users WHERE username = ?";
+    public function getUser($username, $getPassword = false) {
+        if ($getPassword) {
+            $query = "SELECT id, username, password FROM users WHERE username = ?";
+        } else {
+            $query = "SELECT id, username FROM users WHERE username = ?";
+        }
         
         try {
             $stmt = $this->connection->prepare($query);
