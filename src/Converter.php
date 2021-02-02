@@ -7,7 +7,15 @@ abstract class Converter {
         $this->config = $config;
     }
 
+    /**
+     * Convert file from input type to target type
+     */
     abstract public function convert($input);
+
+    /**
+     * Add tabulation and other formats to converted file.
+     */
+    abstract protected function formatString($str);
 }
 
 class JsonConverter extends Converter {
@@ -15,7 +23,7 @@ class JsonConverter extends Converter {
         parent::__construct($config);
     }
 
-    private function formatString($str) {
+    protected function formatString($str) {
         $result = "";
         $tabulation = str_repeat(" ", $this->config->getTabulation());
         $tabulationCount = 0;
@@ -39,7 +47,6 @@ class JsonConverter extends Converter {
     public function convert($input) {
         $jsonString = json_encode($input);
         $formated = $this->formatString($jsonString);
-        //echo $formated;
         return  $formated;
     } 
 }
@@ -49,9 +56,47 @@ class YamlConverter extends Converter {
         parent::__construct($config);
     }
 
+    protected function formatString($str) {
+        $result = "";
+        $rows = explode("\n", $str);
+        $tabulation = str_repeat(" ", $this->config->getTabulation());
+        $tabulationCount = 0;
+        $tabulationPrev = 0;
+        $rowCount = count($rows);
+
+        for ($i = 0; $i < $rowCount; $i++) {
+            $row = $rows[$i];
+            $trimmed = ltrim($row);
+            $currentTabs = strlen($row) - strlen($trimmed);
+            
+            if ($row == "...") {
+                // End of file
+                $result .= $trimmed;
+                $tabulationPrev = 0;
+                $tabulationCount = 0;
+                continue;
+            } else if (strpos($row, "---")) {
+                // Document separator
+                $result .= $trimmed . "\n";
+                $tabulationPrev = 0;
+                $tabulationCount = 0;
+                continue;
+            }
+
+            if ($tabulationPrev < $currentTabs) {
+                $tabulationCount++;
+            } else if ($tabulationPrev > $currentTabs) {
+                $tabulationCount--;
+            }
+            $result .= str_repeat($tabulation, $tabulationCount) . $trimmed . "\n";
+            $tabulationPrev = $currentTabs;
+        }
+        return $result;
+    }
+
     public function convert($input) {
         $yamlString = yaml_emit($input);
-        return $yamlString;
+        return $this->formatString($yamlString);
     }
 }
 

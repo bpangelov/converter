@@ -36,10 +36,12 @@ class Config {
     }
 
     public static function fromJson($cnf) {
+        $name = "";
         if (property_exists($cnf, 'name')) {
             $name = $cnf->name;
         }
 
+        $tabulation = 3;
         if (property_exists($cnf, 'tabulation')) {
             $tabulation = $cnf->tabulation;
         }

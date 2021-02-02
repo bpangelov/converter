@@ -51,12 +51,14 @@ function refreshHistory() {
         .then(response => response.json())
         .then(data => {
             let div = document.getElementById("history_div");
+            div.innerHTML = '';
             data.historyEntries.forEach(hist => {
                 let anchor = document.createElement('a');
                 anchor.href = "#";
                 anchor.innerHTML = "config: " + hist.configName + " file: " + hist.fileName;
                 anchor.onclick = function() { getTransformation(hist.id) };
                 div.appendChild(anchor);
+                div.appendChild(document.createElement("br"));
             })
         })
 }
@@ -105,6 +107,8 @@ function saveCheck() {
         document.getElementById('if_save').style.visibility = 'visible';
     } else {
         document.getElementById('if_save').style.visibility = 'hidden';
+        document.getElementById("file_name").value = '';
+        document.getElementById("config_name").value = '';
     }
 }
 </script>
