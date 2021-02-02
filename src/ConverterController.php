@@ -4,21 +4,40 @@ require_once "Parser.php";
 require_once "Converter.php";
 require_once "./src/dtos/Config.php";
 require_once "./src/db.php";
+require_once "./src/FileUtil.php";
 require_once "./src/repositories/ConfigRepository.php";
+require_once "./src/repositories/TransformationRepository.php";
 
 define("FILE_PATH", "./files/");
 
 class ApiRequest {
     private $config;
-    private $inputFile;
+    private $fileName;
+    private $inputFileContent;
+    private $save;
 
     public function __construct($data) {
         $this->fromJson($data);
     }
 
     private function fromJson($data) {
-        if (property_exists($data, 'inputFile')) {
-            $this->inputFile = $data->inputFile;
+        if (property_exists($data, 'inputFileContent')) {
+            $this->inputFileContent = $data->inputFileContent;
+        } else {
+            http_response_code(400);
+            exit();
+        }
+
+        if (property_exists($data, 'save')) {
+            $this->save = $data->save;
+        } else {
+            echo "hee";
+            http_response_code(400);
+            exit();
+        }
+
+        if (property_exists($data, 'fileName')) {
+            $this->fileName = $data->fileName;
         }
 
         if (property_exists($data, 'config')) {
@@ -31,8 +50,16 @@ class ApiRequest {
         return $this->config;
     }
     
-    public function getInputFile() {
-        return $this->inputFile;
+    public function getFileName() {
+        return $this->fileName;
+    }
+
+    public function getInputFileContent() {
+        return $this->inputFileContent;
+    }
+
+    public function saveTransformation() {
+        return $this->save;
     }
 }
 
@@ -90,7 +117,7 @@ class ConverterController {
 
         $parserFactory = new ParserFactory();
         $parser = $parserFactory->createParser($requestDto->getConfig());
-        $result = $parser->parse($requestDto->getInputFile());
+        $result = $parser->parse($requestDto->getInputFileContent());
 
         $conveterFactory = new ConverterFactory();
         $converter = $conveterFactory->createConverter($requestDto->getConfig());
@@ -100,17 +127,22 @@ class ConverterController {
             mkdir(FILE_PATH);
         }
 
-        // Save to file
-        $file = fopen(FILE_PATH . $requestDto->getConfig()->getName() . "_" . 
-            $requestDto->getConfig()->getId() . "." . 
-            $requestDto->getConfig()->getOutputFormat(), "w") or die("Unable to open file!");
-        fwrite($file, $resultBody);
-        fclose($file);
+        if ($requestDto->saveTransformation()) {
+            // Save to file
+            $fileName = $requestDto->getFileName() . "_" . 
+                        $requestDto->getConfig()->getId() . "." . 
+                        $requestDto->getConfig()->getOutputFormat();
+                        $filePath = FILE_PATH . $fileName;
+            FileUtil::write($filePath, $resultBody);
 
-        // Save config in db
-        $db = new DB();
-        $configRepo = new ConfigRepository($db->getConnection());
-        $configRepo->save($requestDto->getConfig());
+            // Save config in db
+            $db = new DB();
+            $configRepo = new ConfigRepository($db->getConnection());
+            $configRepo->save($requestDto->getConfig());
+
+            $transformationRepo = new TransformationRepository($db->getConnection());
+            $transformationRepo->save($requestDto->getConfig(), $fileName);
+        }
 
         http_response_code(201);
         $response['body'] = json_encode(array("convertedFile" => $resultBody));

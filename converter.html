@@ -4,6 +4,8 @@
 
 Config:<br>
 <form id="config">
+    <label for="save">Save transformation:</label>
+    <input type="checkbox" onclick="saveCheck();" name="save" id="save_check"/><br>
     <label for="config_input">Input type:</label>
     <select id="config_input" name="config_input">
         <option value="json">json</option>
@@ -14,10 +16,14 @@ Config:<br>
         <option value="json">json</option>
         <option value="yaml">yaml</option>
     </select><br>
-    <label for="transformation_name">Name of transformation:</label>
-    <input id="transformation_name"/><br>
     <label for="tabulation">Count of spaces for tabulation:</label>
-    <input type="number" id="tabulation" name="quantity" min="1"><br>
+    <input type="number" id="tabulation" name="quantity" min="1" value="3"><br>
+    <div id="if_save" style="visibility:hidden">
+        <label for="config_name">Name of configuration:</label>
+        <input id="config_name"/><br>
+        <label for="file_name">Name of file:</label>
+        <input id="file_name"/><br>
+    </div>
 </form>
 
 
@@ -31,19 +37,21 @@ File:<br>
 <button type="button" onclick="submit()">submit</button>
 
 <script>
-var API_URL = "http://localhost/converter/api";
+var API_URL = "http://localhost/converter/api/transformations";
 
 function submit() {
 
     let input = document.getElementById("textarea_input").value;
     let apiRequest = {
         "config": {
-            "name":document.getElementById("transformation_name").value,
+            "name":document.getElementById("config_name").value,
             "inputFormat":document.getElementById("config_input").value,
             "outputFormat":document.getElementById("config_output").value,
-            "tabulation":document.getElementById("tabulation").value
+            "tabulation":document.getElementById("tabulation").value,
         },
-        "inputFile":input
+        "save":document.getElementById('save_check').checked,
+        "fileName":document.getElementById("file_name").value,
+        "inputFileContent":input
     };
 
     fetch(API_URL, {
@@ -54,6 +62,14 @@ function submit() {
     .then(response => {
         document.getElementById("textarea_output").value = response.convertedFile;
     });
+}
+
+function saveCheck() {
+    if (document.getElementById('save_check').checked) {
+        document.getElementById('if_save').style.visibility = 'visible';
+    } else {
+        document.getElementById('if_save').style.visibility = 'hidden';
+    }
 }
 </script>
 

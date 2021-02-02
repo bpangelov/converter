@@ -7,7 +7,7 @@ class Config {
     private $outputFormat;
     private $tabulation;
 
-    public function __construct($in, $out, $name = "template", $tabulation = 3) {
+    public function __construct($in, $out, $name = "", $tabulation = 3) {
         $this->id = uniqid();
         $this->inputFormat = $in;
         $this->outputFormat = $out;

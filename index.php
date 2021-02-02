@@ -14,15 +14,20 @@ $requestMethod = $_SERVER["REQUEST_METHOD"];
 
 // pass the request method to Controller
 if ($uri[1] == 'api') {
-    // echo phpinfo();
-    $id = null;
-    if (isset($uri[2])) {
-        $id = (int) $uri[2];
-    }
 
-    $controller = new ConverterController($requestMethod, $id);
-    $controller->handleRequest();
-    exit();
+    if ($uri[2] == 'transformations') {
+        $id = null;
+        if (isset($uri[3])) {
+            $id = (int) $uri[3];
+        }
+
+        $controller = new ConverterController($requestMethod, $id);
+        $controller->handleRequest();
+        exit();
+    } else {
+        http_response_code(404); 
+        exit();
+    }
 } else {
     header("Location: register.php");
     exit();
