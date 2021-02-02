@@ -34,24 +34,60 @@ File:<br>
 <textarea id="textarea_output" rows="20" cols="70">
 </textarea><br>
 
-<button type="button" onclick="submit()">submit</button>
+<button type="button" onclick="submit()">submit</button><br><br>
+
+History:
+<div id="history_div">
+
+</div>
+
+<button type="button" onclick="refreshHistory()">refresh</button>
 
 <script>
 var API_URL = "http://localhost/converter/api/transformations";
 
-function submit() {
+function refreshHistory() {
+    fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            let div = document.getElementById("history_div");
+            data.historyEntries.forEach(hist => {
+                let anchor = document.createElement('a');
+                anchor.href = "#";
+                anchor.innerHTML = "config: " + hist.configName + " file: " + hist.fileName;
+                anchor.onclick = function() { getTransformation(hist.id) };
+                div.appendChild(anchor);
+            })
+        })
+}
 
-    let input = document.getElementById("textarea_input").value;
+function getTransformation(id) {
+    fetch(API_URL + "/" + id)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("config_name").value = data.config.name;
+            document.getElementById("config_input").value = data.config.inputFormat;
+            document.getElementById("config_output").value = data.config.outputFormat;
+            document.getElementById("tabulation").value = data.config.tabulation;
+            document.getElementById('save_check').checked = true;
+            document.getElementById("file_name").value = data.fileName;
+            document.getElementById("textarea_input").value = data.originalFile;
+            document.getElementById("textarea_output").value = data.convertedFile;
+            document.getElementById('if_save').style.visibility = 'visible';
+        });
+}
+
+function submit() {
     let apiRequest = {
         "config": {
-            "name":document.getElementById("config_name").value,
-            "inputFormat":document.getElementById("config_input").value,
+            "name":        document.getElementById("config_name").value,
+            "inputFormat": document.getElementById("config_input").value,
             "outputFormat":document.getElementById("config_output").value,
-            "tabulation":document.getElementById("tabulation").value,
+            "tabulation":  document.getElementById("tabulation").value,
         },
-        "save":document.getElementById('save_check').checked,
-        "fileName":document.getElementById("file_name").value,
-        "inputFileContent":input
+        "save":            document.getElementById('save_check').checked,
+        "fileName":        document.getElementById("file_name").value,
+        "inputFileContent":document.getElementById("textarea_input").value
     };
 
     fetch(API_URL, {

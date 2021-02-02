@@ -31,6 +31,22 @@ class ConfigRepository {
             exit($e->getMessage());
         }  
     }
+
+    public function getSingle($id) {
+        $statement = "
+            SELECT * FROM configs WHERE id = ?;
+        ";
+
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array($id));
+            $result = $fetch->fetch();
+            return array("id" => $result["id"], "name" => $result["name"], "inputFormat" => $result["input_format"],
+                "outputFormat" => $result["output_format"], "tabulation" => $result["tabulation"]);
+        } catch (PDOException $e) {
+            exit($e->getMessage());
+        } 
+    }
 }
 
 ?>

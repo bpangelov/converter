@@ -13,9 +13,12 @@ CREATE TABLE configs (
 );
 
 CREATE TABLE transformations (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     config_id varchar(255) NOT NULL,
     file_name varchar(255) NOT NULL,
-    CONSTRAINT pk_primary_key PRIMARY KEY (config_id,file_name)
+    output_file_name varchar(255) NOT NULL,
+    input_file_name varchar(255) NOT NULL,
+    CONSTRAINT pk_primary_key UNIQUE (config_id,file_name)
 );
 
 CREATE TABLE users (

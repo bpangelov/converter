@@ -99,15 +99,37 @@ class ConverterController {
         }
     }
 
-    private function getSingle($id) {
+    private function getSingle($transformationId) {
+        $db = new DB();
+        // Get transformation
+        $transformationRepo = new TransformationRepository($db->getConnection());
+        $historyEntry = $transformationRepo->getSingle($transformationId);
+
+        // Get config
+        $configRepo = new ConfigRepository($db->getConnection());
+        $config = $configRepo->getSingle($historyEntry["configId"]);
+
+        // Read original and converted files
+        $originalContent = FileUtil::read(FILE_PATH . $historyEntry["inputFileName"]);
+        $convertedContent = FileUtil::read(FILE_PATH . $historyEntry["outputFileName"]);
+
         http_response_code(200);
-        $response['body'] = json_encode(array("GET id" => $id));
+        header('Content-Type: application/json');
+        $response['body'] = json_encode(array("config" => $config, "originalFile" => $originalContent, 
+            "convertedFile" => $convertedContent, "fileName" => $historyEntry["fileName"]
+        ));
         return $response;
     }
 
     private function getAll() {
+        $db = new DB();
+        $transformationRepo = new TransformationRepository($db->getConnection());
+        $historyEntries = $transformationRepo->getAll();
+
+
         http_response_code(200);
-        $response['body'] = json_encode(array("GET All" => "get all called"));
+        header('Content-Type: application/json');
+        $response['body'] = json_encode(array("historyEntries" => $historyEntries));
         return $response;
     }
 
@@ -128,12 +150,18 @@ class ConverterController {
         }
 
         if ($requestDto->saveTransformation()) {
-            // Save to file
-            $fileName = $requestDto->getFileName() . "_" . 
+            // Save to file, keep original file
+            $inputFileName = $requestDto->getFileName() . "_" . 
+                                $requestDto->getConfig()->getId() . "_original" . "." . 
+                                $requestDto->getConfig()->getInputFormat();
+            $outputFileName = $requestDto->getFileName() . "_" . 
                         $requestDto->getConfig()->getId() . "." . 
                         $requestDto->getConfig()->getOutputFormat();
-                        $filePath = FILE_PATH . $fileName;
+            $filePath = FILE_PATH . $outputFileName;
+            $filePathOriginal = FILE_PATH . $inputFileName;
+
             FileUtil::write($filePath, $resultBody);
+            FileUtil::write($filePathOriginal, $requestDto->getInputFileContent());
 
             // Save config in db
             $db = new DB();
@@ -141,10 +169,11 @@ class ConverterController {
             $configRepo->save($requestDto->getConfig());
 
             $transformationRepo = new TransformationRepository($db->getConnection());
-            $transformationRepo->save($requestDto->getConfig(), $fileName);
+            $transformationRepo->save($requestDto->getConfig(), $requestDto->getFileName(), $outputFileName, $inputFileName);
         }
 
         http_response_code(201);
+        header('Content-Type: application/json');
         $response['body'] = json_encode(array("convertedFile" => $resultBody));
         return $response;
     }
