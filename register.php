@@ -1,5 +1,9 @@
 <?php
 require_once("src/db.php");
+require_once("src/repositories/UserRepository.php");
+
+$db = new DB();
+$userRepository = new UserRepository($db->getConnection());
 
 $username = $password = $confirmPassword = "";
 $usernameErr = $passwordErr = $confirmPasswordErr = "";
@@ -8,61 +12,39 @@ $usernameErr = $passwordErr = $confirmPasswordErr = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate username
     if (empty(trim($_POST["username"]))) {
-        $usernameErr = "Please enter a username.";
+        $usernameErr = "Моля въведете потребителско име.";
     } else {
-        $db = new DB();
-        $connection = $db->getConnection();
-        $query = "SELECT id FROM users WHERE username = ?";
-        
-        if ($stmt = $connection->prepare($query)) {
-            $usernameParam = trim($_POST["username"]);
-            if ($result = $stmt->execute([$usernameParam])) {
-                $username = trim($_POST["username"]);
-
-                $row = $stmt->fetch();
-                if ($row) {
-                    $usernameErr = "This username is already taken.";
-                } else {
-                    $username = trim($_POST["username"]);
-                }
-            } else {
-                echo "Oops! Something went wrong. Please try again later.";
-            }
+        $user = $userRepository->getUser(trim($_POST["username"]));
+        if ($user) {
+            $usernameErr = "Потребителското име е заето.";
+        } else {
+            $username = trim($_POST["username"]);
         }
     }
     // Validate password
     if (empty(trim($_POST["password"]))) {
-        $passwordErr = "Please enter a password.";     
+        $passwordErr = "Моля въведете парола.";     
     } elseif (strlen(trim($_POST["password"])) < 6) {
-        $passwordErr = "Password must have atleast 6 characters.";
+        $passwordErr = "Паролата трябва да е поне 6 символа.";
     } else {
         $password = trim($_POST["password"]);
     }
     
     // Validate confirm password
     if (empty(trim($_POST["confirmPassword"]))) {
-        $confirmPasswordErr = "Please confirm password.";     
+        $confirmPasswordErr = "Моля потвърдете паролата.";     
     } else {
         $confirmPassword = trim($_POST["confirmPassword"]);
         if (empty($passwordErr) && ($password != $confirmPassword)) {
-            $confirmPasswordErr = "Passwords did not match.";
+            $confirmPasswordErr = "Паролите не съвпадат.";
         }
     }
     
     // Check input errors before inserting in database
     if (empty($usernameErr) && empty($passwordErr) && empty($confirmPasswordErr)) {
-        $query = "INSERT INTO users (username, password) VALUES (?, ?)";
+        $userRepository->saveUser($username, $password);
          
-        if ($stmt = $connection->prepare($query)) {
-            $usernameParam = $username;
-            $passwordParam = password_hash($password, PASSWORD_DEFAULT);
-            
-            if ($stmt->execute([$usernameParam, $passwordParam])) {
-                header("Location: login.php");
-            } else{
-                echo "Something went wrong. Please try again later.";
-            }
-        }
+        header("Location: login.php");
     }
 }
 ?>

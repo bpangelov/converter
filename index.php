@@ -29,7 +29,7 @@ if ($uri[1] == 'api') {
         exit();
     }
 } else {
-    header("Location: register.php");
+    header("Location: login.php");
     exit();
 }
 

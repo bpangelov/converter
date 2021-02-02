@@ -9,17 +9,18 @@ class TransformationRepository {
         $this->connection = $connection;
     }
 
-    public function save($config, $fileName, $outputFileName, $inputFileName) {
+    public function save($userID, $config, $fileName, $outputFileName, $inputFileName) {
         $statement = "
             INSERT INTO transformations 
-                (config_id, file_name, output_file_name, input_file_name)
+                (user_id, config_id, file_name, output_file_name, input_file_name)
             VALUES
-                (:config_id, :file_name, :output_file_name, :input_file_name);
+                (:user_id, :config_id, :file_name, :output_file_name, :input_file_name);
         ";
 
         try {
             $statement = $this->connection->prepare($statement);
             $statement->execute(array(
+                'user_id' => $userID,
                 'config_id' => $config->getId(),
                 'file_name' => $fileName,
                 'output_file_name' => $outputFileName,
@@ -31,15 +32,15 @@ class TransformationRepository {
         }  
     }
 
-    public function getAll() {
+    public function getForUser($userID) {
         $statement = "
-            SELECT * FROM transformations;
+            SELECT * FROM transformations WHERE user_id = ?;
         ";
 
         $configRepo = new ConfigRepository($this->connection);
         try {
             $fetch = $this->connection->prepare($statement);
-            $fetch->execute();
+            $fetch->execute([$userID]);
             $result = $fetch->fetchAll(PDO::FETCH_ASSOC);
             $arr = array();
 

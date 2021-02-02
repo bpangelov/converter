@@ -31,7 +31,6 @@ class ApiRequest {
         if (property_exists($data, 'save')) {
             $this->save = $data->save;
         } else {
-            echo "hee";
             http_response_code(400);
             exit();
         }
@@ -78,7 +77,7 @@ class ConverterController {
                 if ($this->id) {
                     $response = $this->getSingle($this->id);
                 } else {
-                    $response = $this->getAll();
+                    $response = $this->getForUser();
                 };
                 break;
             case 'POST':
@@ -121,11 +120,17 @@ class ConverterController {
         return $response;
     }
 
-    private function getAll() {
+    private function getForUser() {
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            exit("user is not logged in");
+        }
+
         $db = new DB();
         $transformationRepo = new TransformationRepository($db->getConnection());
-        $historyEntries = $transformationRepo->getAll();
-
+        $historyEntries = $transformationRepo->getForUser($userID);
 
         http_response_code(200);
         header('Content-Type: application/json');
@@ -168,8 +173,13 @@ class ConverterController {
             $configRepo = new ConfigRepository($db->getConnection());
             $configRepo->save($requestDto->getConfig());
 
+            session_start();
+            if (isset($_SESSION["id"])) {
+                $userID = $_SESSION["id"];
+            }
+
             $transformationRepo = new TransformationRepository($db->getConnection());
-            $transformationRepo->save($requestDto->getConfig(), $requestDto->getFileName(), $outputFileName, $inputFileName);
+            $transformationRepo->save($userID, $requestDto->getConfig(), $requestDto->getFileName(), $outputFileName, $inputFileName);
         }
 
         http_response_code(201);

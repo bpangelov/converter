@@ -1,5 +1,6 @@
 <?php
 require_once("src/db.php");
+require_once("src/repositories/UserRepository.php");
 
 session_start();
  
@@ -9,55 +10,42 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
     exit();
 }
 
+$db = new DB();
+$userRepository = new UserRepository($db->getConnection());
+
 $username = $password = "";
 $usernameErr = $passwordErr = "";
  
 // When form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty(trim($_POST["username"]))) {
-        $usernameErr = "Please enter username.";
+        $usernameErr = "Моля въведете потребителско име.";
     } else {
         $username = trim($_POST["username"]);
     }
     
     if (empty(trim($_POST["password"]))) {
-        $passwordErr = "Please enter your password.";
+        $passwordErr = "Моля въведете парола.";
     } else{
         $password = trim($_POST["password"]);
     }
     
     // Validate credentials
     if (empty($usernameErr) && empty($passwordErr)) {
-        $db = new DB();
-        $connection = $db->getConnection();
-        $query = "SELECT id, username, password FROM users WHERE username = ?";
-        
-        if ($stmt = $connection->prepare($query)) {
-            $usernameParam = trim($_POST["username"]);
-            if ($result = $stmt->execute([$usernameParam])) {
-				$row = $stmt->fetch();
-				
-				$id = $row["id"];
-				$username = $row["username"];
-				$hashedPassword = $row["password"];
+        $user = $userRepository->getUser($username);
 
-				if (!$row) {
-					$usernameErr = "No account found with that username.";
-				} else {
-					if (password_verify($password, $hashedPassword)) {
-						session_start();
+        if (!$user) {
+            $usernameErr = "Потребителското име не съществува.";
+        } else {
+            $hashedPassword = $user["password"];
+            if (password_verify($password, $hashedPassword)) {
+                $_SESSION["logged"] = true;
+                $_SESSION["id"] = $user["id"];
+                $_SESSION["username"] = $user["username"];
 
-						$_SESSION["logged"] = true;
-						$_SESSION["id"] = $id;
-						$_SESSION["username"] = $username;                            
-
-						header("Location: converter.html");
-					} else {
-						$passwordErr = "The password you entered was not valid.";
-					}
-				}
-            } else{
-                echo "Oops! Something went wrong. Please try again later.";
+                header("Location: converter.html");
+            } else {
+                $passwordErr = "Грешна парола.";
             }
         }
     }
