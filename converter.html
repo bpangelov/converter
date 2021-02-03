@@ -27,6 +27,8 @@ Config:<br>
         <input id="config_name"/><br>
         <label for="file_name">Name of file:</label>
         <input id="file_name"/><br>
+        <label for="share_with">Share with another user:</label>
+        <input id="share_with"/><br>
     </div>
 </form>
 
@@ -57,6 +59,7 @@ Shared:
 var API_URL = "http://localhost/converter/api/transformations";
 
 function refreshHistory() {
+    resetAll();
     fetch(API_URL)
         .then(response => response.json())
         .then(data => {
@@ -121,7 +124,8 @@ function submit() {
         },
         "save":            document.getElementById('save_check').checked,
         "fileName":        document.getElementById("file_name").value,
-        "inputFileContent":document.getElementById("textarea_input").value
+        "inputFileContent":document.getElementById("textarea_input").value,
+        "shareWith":       document.getElementById("share_with").value
     };
 
     fetch(API_URL, {
@@ -154,7 +158,8 @@ function update() {
         },
         "save":             document.getElementById('save_check').checked,
         "fileName":         document.getElementById("file_name").value,
-        "inputFileContent":document.getElementById("textarea_input").value,
+        "inputFileContent": document.getElementById("textarea_input").value,
+        "shareWith":        document.getElementById("share_with").value
     };
 
     fetch(API_URL, {
@@ -183,6 +188,7 @@ function saveCheck() {
         document.getElementById('if_save').style.visibility = 'hidden';
         document.getElementById("file_name").value = '';
         document.getElementById("config_name").value = '';
+        document.getElementById("share_with").value = '';
     }
 }
 

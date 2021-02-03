@@ -33,11 +33,12 @@ class ConfigRepository {
         }  
     }
 
-    public function getIfExistsForUser($configName, $userId) {
+    public function getIfOwnedOrSharedWithUser($configName, $userId) {
         $statement = "
-            SELECT configs.id, name, input_format, output_format, tabulation
-            FROM configs JOIN transformations ON configs.id = transformations.config_id
-            WHERE configs.name = :configName AND transformations.user_id = :userId;
+            SELECT configs.id, name, input_format, output_format, tabulation FROM configs 
+            JOIN transformations ON configs.id = transformations.config_id
+            LEFT JOIN shares ON shares.transformation_id = transformations.id
+            WHERE configs.name = :configName AND (transformations.user_id = :userId OR shares.user_id = :userId);
         ";
         try {
             $fetch = $this->connection->prepare($statement);

@@ -35,6 +35,17 @@ class SharesRepository {
             exit($e->getMessage());
         } 
     }
+
+    public function deleteShares($transformationID) {
+        $query = "DELETE FROM shares WHERE transformation_id = ?;";
+
+        try {
+            $stmt = $this->connection->prepare($query);
+            $stmt->execute([$transformationID]);
+        } catch (PDOException $e) {
+            exit($e->getMessage());
+        } 
+    }
 }
 
 ?>

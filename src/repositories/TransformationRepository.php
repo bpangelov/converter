@@ -76,7 +76,7 @@ class TransformationRepository {
             }
             return array("id" => $row["id"], "configId"=> $row["config_id"], 
                 "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
-                "outputFileName" => $row["output_file_name"]);;
+                "outputFileName" => $row["output_file_name"], "userId" => $row["user_id"]);;
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());

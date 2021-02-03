@@ -5,6 +5,7 @@ require_once "Converter.php";
 require_once "./src/dtos/Config.php";
 require_once "./src/db.php";
 require_once "./src/FileUtil.php";
+require_once "./src/repositories/UserRepository.php";
 require_once "./src/repositories/ConfigRepository.php";
 require_once "./src/repositories/TransformationRepository.php";
 require_once "./src/repositories/SharesRepository.php";
@@ -15,6 +16,7 @@ class ApiRequest {
     private $config;
     private $fileName;
     private $inputFileContent;
+    private $shareWith;
     private $save;
 
     public function __construct($data) {
@@ -44,6 +46,12 @@ class ApiRequest {
             $cnf = $data->config;
             $this->config = Config::fromJson($cnf);
         }
+
+        if (property_exists($data, 'shareWith')) {
+            $this->shareWith = $data->shareWith;
+        } else {
+            $this->shareWith = null;
+        }
     }
 
     public function getConfig() {
@@ -60,6 +68,10 @@ class ApiRequest {
 
     public function saveTransformation() {
         return $this->save;
+    }
+
+    public function getShareWith() {
+        return $this->shareWith;
     }
 }
 
@@ -175,7 +187,7 @@ class ConverterController {
             // Save config in db if it doesn't exist
             $db = new DB();
             $configRepo = new ConfigRepository($db->getConnection());
-            $config = $configRepo->getIfExistsForUser($requestDto->getConfig()->getName(), $userID);
+            $config = $configRepo->getIfOwnedOrSharedWithUser($requestDto->getConfig()->getName(), $userID);
 
             if ($config == null) {
                 $config = $configRepo->save($requestDto->getConfig());
@@ -197,6 +209,7 @@ class ConverterController {
                                     $config->getOutputFormat();
 
                 $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
+                $transformation = $transformationRepo->getByConfigAndFile($config, $requestDto->getFileName());
 
                 $filePath = FILE_PATH . $outputFileName;
                 $filePathOriginal = FILE_PATH . $inputFileName;
@@ -206,6 +219,9 @@ class ConverterController {
             } else {
                 http_response_code(405);
                 exit("Modifying transformation is not allowed with this method");
+            }
+            if ($requestDto->getShareWith()) {
+                $this->shareTransformation($transformation, $requestDto->getShareWith());
             }
         }
         
@@ -231,7 +247,7 @@ class ConverterController {
         $db = new DB();
         $configRepo = new ConfigRepository($db->getConnection());
         $transformationRepo = new TransformationRepository($db->getConnection());
-        $config = $configRepo->getIfExistsForUser($requestDto->getConfig()->getName(), $userID);
+        $config = $configRepo->getIfOwnedOrSharedWithUser($requestDto->getConfig()->getName(), $userID);
 
         if ($config == null) {
             http_response_code(404);
@@ -245,8 +261,8 @@ class ConverterController {
         }
 
         // Don't change formats
-        if ($config->getInputFormat() != $requestDto->getConfig()->getInputFormat() ||
-            $config->getOutputFormat() != $requestDto->getConfig()->getOutputFormat()) {
+        if ($config->getInputFormat() !== $requestDto->getConfig()->getInputFormat() ||
+            $config->getOutputFormat() !== $requestDto->getConfig()->getOutputFormat()) {
 
             http_response_code(405);
             exit("Changing formats is not allowed with this method");
@@ -268,6 +284,10 @@ class ConverterController {
         FileUtil::overwrite($filePath, $resultConverted);
         FileUtil::overwrite($filePathOriginal, $requestDto->getInputFileContent());
 
+        if ($requestDto->getShareWith()) {
+            $this->shareTransformation($transformation, $requestDto->getShareWith());
+        }
+
         http_response_code(200);
         header('Content-Type: application/json');
         $response['body'] = json_encode(array("convertedFile" => $resultConverted));
@@ -287,6 +307,7 @@ class ConverterController {
         $db = new DB();
         $configRepo = new ConfigRepository($db->getConnection());
         $transformationRepo = new TransformationRepository($db->getConnection());
+        $sharesRepo = new SharesRepository($db->getConnection());
 
         $transformation = $transformationRepo->getSingle($id);
         if ($transformation == null) {
@@ -298,6 +319,7 @@ class ConverterController {
         $fileConverted = $transformation["outputFileName"];
         $configId = $transformation["configId"];
 
+        $sharesRepo->deleteShares($id);
         $transformationRepo->delete($id);
         $configRepo->delete($configId);
 
@@ -317,6 +339,22 @@ class ConverterController {
         $conveterFactory = new ConverterFactory();
         $converter = $conveterFactory->createConverter($config);
         return $converter->convert($result);
+    }
+
+    private function shareTransformation($transformation, $userName) {
+        $db = new DB();
+        $userRepo = new UserRepository($db->getConnection());
+        $sharesRepo = new SharesRepository($db->getConnection());
+
+        $user = $userRepo->getUser($userName);
+        if ($user == null || $user == "") {
+            http_response_code(400);
+            exit("user doesn't exist");
+        }
+
+        if ($transformation["userId"] !== $user["id"]) {
+            $sharesRepo->shareTransformation($user["id"], $transformation["id"]);
+        }
     }
 }
 
