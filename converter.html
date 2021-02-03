@@ -38,8 +38,9 @@ File:<br>
 <textarea id="textarea_output" rows="20" cols="70">
 </textarea><br>
 
-<button type="button" onclick="submit()">submit</button><br><br>
-<button type="update" onclick="update()">update</button><br><br>
+<button type="submit" onclick="submit()">submit</button><br><br>
+<button id="update_btn" type="update" onclick="update()" disabled>update</button><br><br>
+<button id="delete_btn" type="delete" onclick="" disabled>remove</button><br><br>
 
 History:
 <div id="history_div">
@@ -98,6 +99,11 @@ function getTransformation(id) {
             document.getElementById("textarea_input").value = data.originalFile;
             document.getElementById("textarea_output").value = data.convertedFile;
             document.getElementById('if_save').style.visibility = 'visible';
+            
+            let dlt = document.getElementById("delete_btn");
+            dlt.disabled = false;
+            dlt.onclick = function() { remove(id) };
+            document.getElementById("update_btn").disabled = false;
         }).catch(function(err) {
             console.log('Fetch Error :-S', err);
         });
@@ -105,6 +111,7 @@ function getTransformation(id) {
 
 function submit() {
     document.getElementById("textarea_output").value = "";
+    dissableModification();
     let apiRequest = {
         "config": {
             "name":        document.getElementById("config_name").value,
@@ -177,6 +184,39 @@ function saveCheck() {
         document.getElementById("file_name").value = '';
         document.getElementById("config_name").value = '';
     }
+}
+
+function remove(id) {
+    fetch(API_URL + "/" + id, {
+        method: "DELETE", 
+    })
+    .then(response => {
+        resetAll();
+        console.log('Item deleted');
+        console.log(response);
+        response.text();
+    })
+    .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+    });
+}
+
+function resetAll() {
+    document.getElementById("config_input").value = "json";
+    document.getElementById("config_output").value = "json";
+    document.getElementById("tabulation").value = 3;
+    document.getElementById('save_check').checked = false;
+    document.getElementById("textarea_input").value = "";
+    document.getElementById("textarea_output").value = "";
+    saveCheck();
+    dissableModification();
+}
+
+function dissableModification() {
+    let dlt = document.getElementById("delete_btn");
+    dlt.disabled = true;
+    dlt.onclick = "";
+    document.getElementById("update_btn").disabled = true;
 }
 </script>
 

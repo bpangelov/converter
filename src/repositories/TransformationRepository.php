@@ -92,9 +92,26 @@ class TransformationRepository {
             $fetch = $this->connection->prepare($statement);
             $fetch->execute(array($id));
             $row = $fetch->fetch();
+            if (!$row || $row == "") {
+                return null;
+            }
             return array("id" => $row["id"], "configId"=> $row["config_id"], 
                 "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
                 "outputFileName" => $row["output_file_name"]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        } 
+    }
+
+    public function delete($id) {
+        $statement = "
+            DELETE FROM transformations WHERE id = ?;
+        ";
+
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array($id));
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());

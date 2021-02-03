@@ -92,6 +92,20 @@ class ConfigRepository {
             exit($e->getMessage());
         }
     }
+
+    public function delete($id) {
+        $statement = "
+            DELETE FROM configs WHERE id = ?;
+        ";
+
+        try {
+            $op = $this->connection->prepare($statement);
+            $op->execute(array($id));
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        } 
+    }
 }
 
 ?>

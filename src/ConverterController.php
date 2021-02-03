@@ -98,7 +98,7 @@ class ConverterController {
                 http_response_code(404);
                 exit();
         }
-        if ($response['body']) {
+        if (array_key_exists('body', $response)) {
             echo $response['body'];
         }
     }
@@ -274,10 +274,39 @@ class ConverterController {
         return $response;
     }
 
-    private function delete() {
-        http_response_code(200);
-        $response['body'] = json_encode(array("DELETE" => "delete called"));
-        return $response;
+    private function delete($id) {
+        $userID = "";
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            http_response_code(401);
+            exit("user is not logged in");
+        }
+
+        $db = new DB();
+        $configRepo = new ConfigRepository($db->getConnection());
+        $transformationRepo = new TransformationRepository($db->getConnection());
+
+        $transformation = $transformationRepo->getSingle($id);
+        if ($transformation == null) {
+            http_response_code(204);
+            return array();
+        }
+
+        $fileOriginal = $transformation["inputFileName"];
+        $fileConverted = $transformation["outputFileName"];
+        $configId = $transformation["configId"];
+
+        $transformationRepo->delete($id);
+        $configRepo->delete($configId);
+
+        // Delete files
+        unlink(FILE_PATH . $fileOriginal);
+        unlink(FILE_PATH . $fileConverted);
+
+        http_response_code(204);
+        return array();
     }
 
     private function parseAndConvert($config, $fileContent) {
