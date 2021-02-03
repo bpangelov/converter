@@ -48,6 +48,18 @@ class ParserFactory {
                 exit("Unknown format");
         }
     }
+
+    public function createParserByType($type) {
+        switch ($type) {
+            case 'json':
+                return new JsonParser();
+            case 'yaml':
+                return new YamlParser();
+            default:
+                http_response_code(400);
+                exit("Unknown format");
+        }
+    }
 }
 
 ?>

@@ -1,6 +1,7 @@
 <?php
 
 require_once "./src/repositories/ConfigRepository.php";
+require_once "./src/dtos/Config.php";
 
 class TransformationRepository {
     private $connection;
@@ -46,12 +47,36 @@ class TransformationRepository {
             $arr = array();
 
             foreach ($result as $id => $row) {
-                $configName = $configRepo->getSingle($row["config_id"])["name"];
+                $configName = $configRepo->getSingle($row["config_id"])->getName();
                 array_push($arr, array("id" => $row["id"], "configId"=> $row["config_id"], 
                     "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
                     "outputFileName" => $row["output_file_name"], "configName" => $configName));
             }
             return $arr;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
+    }
+
+    public function getByConfigAndFile($config, $fileName) {
+        $statement = "
+            SELECT * FROM transformations WHERE config_id = :id AND file_name = :file;
+        ";
+
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array(
+                "id" => $config->getId(),
+                "file" => $fileName
+            ));
+            $row = $fetch->fetch();
+            if (!$row || $row == "") {
+                return null;
+            }
+            return array("id" => $row["id"], "configId"=> $row["config_id"], 
+                "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
+                "outputFileName" => $row["output_file_name"]);;
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());

@@ -9,7 +9,7 @@ class ConfigRepository {
         $this->connection = $connection;
     }
 
-    public function save($config, $userId) {
+    public function save($config) {
         $statement = "
             INSERT INTO configs 
                 (id, name, input_format, output_format, tabulation)
@@ -17,10 +17,6 @@ class ConfigRepository {
                 (:id, :name, :inputFormat, :outputFormat, :tabulation);
         ";
 
-        $existing = $this->checkIfExistsForUser($config->getName(), $userId);
-        if ($existing != null) {
-            return Config::fromMap($existing);
-        }
         try {
             $statement = $this->connection->prepare($statement);
             $statement->execute(array(
@@ -37,7 +33,7 @@ class ConfigRepository {
         }  
     }
 
-    private function checkIfExistsForUser($configName, $userId) {
+    public function getIfExistsForUser($configName, $userId) {
         $statement = "
             SELECT configs.id, name, input_format, output_format, tabulation
             FROM configs JOIN transformations ON configs.id = transformations.config_id
@@ -49,11 +45,9 @@ class ConfigRepository {
             $result = $fetch->fetch();
             
             if (!$result || $result == "") {
-                error_log("Not found", 3 , "./err_log.log");
                 return null;
             }
-            return array("id" => $result["id"], "name" => $result["name"], "inputFormat" => $result["input_format"],
-                "outputFormat" => $result["output_format"], "tabulation" => $result["tabulation"]);
+            return Config::fromDatabaseEntry($result);
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());
@@ -69,12 +63,34 @@ class ConfigRepository {
             $fetch = $this->connection->prepare($statement);
             $fetch->execute(array($id));
             $result = $fetch->fetch();
-            return array("id" => $result["id"], "name" => $result["name"], "inputFormat" => $result["input_format"],
-                "outputFormat" => $result["output_format"], "tabulation" => $result["tabulation"]);
+            return Config::fromDatabaseEntry($result);;
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());
-        } 
+        }
+    }
+
+    public function update($id, $config) {
+        $statement = "
+            UPDATE configs
+            SET input_format = :inputFormat, output_format = :outputFormat, tabulation = :tabulation
+            WHERE id = :id;
+        ";
+
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array(
+                'id' => $id,
+                'inputFormat'  => $config->getInputFormat(),
+                'outputFormat' => $config->getOutputFormat(),
+                'tabulation' => $config->getTabulation(),
+            ));
+            $result = $this->getSingle($id);
+            return $result;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
     }
 }
 

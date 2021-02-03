@@ -26,14 +26,14 @@ class ApiRequest {
             $this->inputFileContent = $data->inputFileContent;
         } else {
             http_response_code(400);
-            exit();
+            exit("Input file required");
         }
 
         if (property_exists($data, 'save')) {
             $this->save = $data->save;
         } else {
             http_response_code(400);
-            exit();
+            exit("Save flag required");
         }
 
         if (property_exists($data, 'fileName')) {
@@ -73,6 +73,10 @@ class ConverterController {
     }
 
     public function handleRequest() {
+        if (!is_dir(FILE_PATH)) {
+            mkdir(FILE_PATH);
+        }
+
         switch ($this->requestMethod) {
             case 'GET':
                 if ($this->id) {
@@ -123,7 +127,7 @@ class ConverterController {
 
         http_response_code(200);
         header('Content-Type: application/json');
-        $response['body'] = json_encode(array("config" => $config, "originalFile" => $originalContent, 
+        $response['body'] = json_encode(array("config" => $config->getJson(), "originalFile" => $originalContent, 
             "convertedFile" => $convertedContent, "fileName" => $historyEntry["fileName"]
         ));
         return $response;
@@ -156,20 +160,11 @@ class ConverterController {
         $input = json_decode(file_get_contents('php://input'));
         $requestDto = new ApiRequest($input);
 
-        $parserFactory = new ParserFactory();
-        $parser = $parserFactory->createParser($requestDto->getConfig());
-        $result = $parser->parse($requestDto->getInputFileContent());
-
-        $conveterFactory = new ConverterFactory();
-        $converter = $conveterFactory->createConverter($requestDto->getConfig());
-        $resultBody = $converter->convert($result);
-
-        if (!is_dir(FILE_PATH)) {
-            mkdir(FILE_PATH);
-        }
+        $resultBody = $this->parseAndConvert($requestDto->getConfig(), $requestDto->getInputFileContent());
 
         if ($requestDto->saveTransformation()) {
             session_start();
+            $userID = "";
             if (isset($_SESSION["id"])) {
                 $userID = $_SESSION["id"];
             } else {
@@ -177,27 +172,41 @@ class ConverterController {
                 exit("user is not logged in");
             }
 
-            // Save config in db
+            // Save config in db if it doesn't exist
             $db = new DB();
             $configRepo = new ConfigRepository($db->getConnection());
-            $config = $configRepo->save($requestDto->getConfig(), $userID);
+            $config = $configRepo->getIfExistsForUser($requestDto->getConfig()->getName(), $userID);
 
-            // Save to file, keep original file
-            $inputFileName = $requestDto->getFileName() . "_" . 
-                                $config->getId() . "_original" . "." . 
-                                $config->getInputFormat();
-            $outputFileName = $requestDto->getFileName() . "_" . 
-                                $config->getId() . "." . 
-                                $config->getOutputFormat();
+            if ($config == null) {
+                $config = $configRepo->save($requestDto->getConfig());
+            } else if (!$config->isSameAs($requestDto->getConfig())) {
+                http_response_code(405);
+                exit("Modifying config is not allowed with this method");
+            }
 
             $transformationRepo = new TransformationRepository($db->getConnection());
-            $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
+            $transformation = $transformationRepo->getByConfigAndFile($config, $requestDto->getFileName());
 
-            $filePath = FILE_PATH . $outputFileName;
-            $filePathOriginal = FILE_PATH . $inputFileName;
+            if ($transformation == null) {
+                // Save to file, keep original file
+                $inputFileName = $requestDto->getFileName() . "_" . 
+                                    $config->getId() . "_original" . "." . 
+                                    $config->getInputFormat();
+                $outputFileName = $requestDto->getFileName() . "_" . 
+                                    $config->getId() . "." . 
+                                    $config->getOutputFormat();
 
-            FileUtil::write($filePath, $resultBody);
-            FileUtil::write($filePathOriginal, $requestDto->getInputFileContent());
+                $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
+
+                $filePath = FILE_PATH . $outputFileName;
+                $filePathOriginal = FILE_PATH . $inputFileName;
+
+                FileUtil::write($filePath, $resultBody);
+                FileUtil::write($filePathOriginal, $requestDto->getInputFileContent());
+            } else {
+                http_response_code(405);
+                exit("Modifying transformation is not allowed with this method");
+            }
         }
         
         http_response_code(201);
@@ -207,8 +216,61 @@ class ConverterController {
     }
 
     private function edit() {
+        $userID = "";
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            http_response_code(401);
+            exit("user is not logged in");
+        }
+
+        $input = json_decode(file_get_contents('php://input'));
+        $requestDto = new ApiRequest($input);
+
+        $db = new DB();
+        $configRepo = new ConfigRepository($db->getConnection());
+        $transformationRepo = new TransformationRepository($db->getConnection());
+        $config = $configRepo->getIfExistsForUser($requestDto->getConfig()->getName(), $userID);
+
+        if ($config == null) {
+            http_response_code(404);
+            exit("Config doesn't exist for user");
+        }
+
+        $transformation = $transformationRepo->getByConfigAndFile($config, $requestDto->getFileName());
+        if ($transformation == null) {
+            http_response_code(404);
+            exit("Transformation with this file doesn't exist");
+        }
+
+        // Don't change formats
+        if ($config->getInputFormat() != $requestDto->getConfig()->getInputFormat() ||
+            $config->getOutputFormat() != $requestDto->getConfig()->getOutputFormat()) {
+
+            http_response_code(405);
+            exit("Changing formats is not allowed with this method");
+        }
+
+        $config = $configRepo->update($config->getId(), $requestDto->getConfig());
+        $resultConverted = $this->parseAndConvert($config, $requestDto->getInputFileContent());
+
+        $inputFileName = $requestDto->getFileName() . "_" . 
+                            $config->getId() . "_original" . "." . 
+                            $config->getInputFormat();
+        $outputFileName = $requestDto->getFileName() . "_" . 
+                            $config->getId() . "." . 
+                            $config->getOutputFormat();
+
+        $filePath = FILE_PATH . $outputFileName;
+        $filePathOriginal = FILE_PATH . $inputFileName;
+
+        FileUtil::overwrite($filePath, $resultConverted);
+        FileUtil::overwrite($filePathOriginal, $requestDto->getInputFileContent());
+
         http_response_code(200);
-        $response['body'] = json_encode(array("PUT" => "put called"));
+        header('Content-Type: application/json');
+        $response['body'] = json_encode(array("convertedFile" => $resultConverted));
         return $response;
     }
 
@@ -216,6 +278,16 @@ class ConverterController {
         http_response_code(200);
         $response['body'] = json_encode(array("DELETE" => "delete called"));
         return $response;
+    }
+
+    private function parseAndConvert($config, $fileContent) {
+        $parserFactory = new ParserFactory();
+        $parser = $parserFactory->createParser($config);
+        $result = $parser->parse($fileContent);
+
+        $conveterFactory = new ConverterFactory();
+        $converter = $conveterFactory->createConverter($config);
+        return $converter->convert($result);
     }
 }
 

@@ -13,6 +13,12 @@ class FileUtil {
         fwrite($file, $content);
         fclose($file);
     }
+
+    public static function overwrite($filePath, $content) {
+        $file = fopen($filePath , "w+") or die("Unable to open file!");
+        fwrite($file, $content);
+        fclose($file);
+    }
 }
 
 ?>

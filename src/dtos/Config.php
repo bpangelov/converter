@@ -1,72 +1,79 @@
 <?php
 
 class Config {
-    private $id;
-    private $name;
-    private $inputFormat;
-    private $outputFormat;
-    private $tabulation;
+    private $json;
 
-    public function __construct($in, $out, $name = "", $tabulation = 3, $id = null) {
-        if ($id == null) {
-            $this->id = uniqid();
+    public function __construct($json) {
+        $this->json = $json;
+        if (!array_key_exists("id", $json)) {
+            $this->json["id"] = uniqid();
         }
-        $this->inputFormat = $in;
-        $this->outputFormat = $out;
-        $this->tabulation = $tabulation;
-        $this->name = $name;
+    }
+
+    public function getJson() {
+        return $this->json;
     }
 
     public function getId() {
-        return $this->id;
+        return $this->json["id"];
     }
 
     public function getName() {
-        return $this->name;
+        return $this->json["name"];
     }
 
     public function getInputFormat() {
-        return $this->inputFormat;
+        return $this->json["inputFormat"];
     }
     
     public function getOutputFormat() {
-        return $this->outputFormat;
+        return $this->json["outputFormat"];
     }
 
     public function getTabulation() {
-        return $this->tabulation;
+        return $this->json["tabulation"];
     }
 
     public static function fromJson($cnf) {
-        $name = "";
+        $json = array();
         if (property_exists($cnf, 'name')) {
-            $name = $cnf->name;
+            $json["name"] = $cnf->name;
+        } else {
+            $json["name"] = "";
         }
 
-        $tabulation = 3;
         if (property_exists($cnf, 'tabulation')) {
-            $tabulation = $cnf->tabulation;
+            $json["tabulation"] = $cnf->tabulation;
+        } else {
+            http_response_code(400);
+            exit("Tabulation not set");
         }
 
         if (property_exists($cnf, 'inputFormat')) {
-            $in = $cnf->inputFormat;
+            $json["inputFormat"] = $cnf->inputFormat;
         } else {
             http_response_code(400);
             exit();
         }
 
         if (property_exists($cnf, 'outputFormat')) {
-            $out = $cnf->outputFormat;
+            $json["outputFormat"] = $cnf->outputFormat;
         } else {
             http_response_code(400);
             exit();
         }
 
-        return new Config($in, $out, $name, $tabulation);
+        return new Config($json);
     }
 
-    public static function fromMap($map) {
-        return new Config($map["inputFormat"], $map["outputFormat"], $map["name"], $map["tabulation"], $map["id"]);
+    public function isSameAs($other) {
+        return $other->getOutputFormat() == $this->getOutputFormat() && $other->getInputFormat() == $this->getInputFormat()
+            &&  $other->getTabulation() == $this->getTabulation() && $other->getName() == $this->getName();
+    }
+
+    public static function fromDatabaseEntry($map) {
+        return new Config(array("id" => $map["id"], "name" => $map["name"], "inputFormat" => $map["input_format"],
+            "outputFormat" => $map["output_format"], "tabulation" => $map["tabulation"]));
     }
 }
 

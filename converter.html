@@ -2,6 +2,10 @@
 <html>
 <body>
 
+<div id="error_div">
+    <p id="error_msg"></p>
+</div>
+
 Config:<br>
 <form id="config">
     <label for="save">Save transformation:</label>
@@ -35,6 +39,7 @@ File:<br>
 </textarea><br>
 
 <button type="button" onclick="submit()">submit</button><br><br>
+<button type="update" onclick="update()">update</button><br><br>
 
 History:
 <div id="history_div">
@@ -99,6 +104,7 @@ function getTransformation(id) {
 }
 
 function submit() {
+    document.getElementById("textarea_output").value = "";
     let apiRequest = {
         "config": {
             "name":        document.getElementById("config_name").value,
@@ -113,6 +119,39 @@ function submit() {
 
     fetch(API_URL, {
         method: "POST", 
+        body: JSON.stringify(apiRequest),
+        headers : { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        return response.json();
+    })
+    .then(response => {
+        document.getElementById("textarea_output").value = response.convertedFile;
+    })
+    .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+    });
+}
+
+function update() {
+    document.getElementById("textarea_output").value = "";
+    let apiRequest = {
+        "config": {
+            "name":         document.getElementById("config_name").value,
+            "inputFormat":  document.getElementById("config_input").value,
+            "outputFormat": document.getElementById("config_output").value,
+            "tabulation":   document.getElementById("tabulation").value,
+        },
+        "save":             document.getElementById('save_check').checked,
+        "fileName":         document.getElementById("file_name").value,
+        "inputFileContent":document.getElementById("textarea_input").value,
+    };
+
+    fetch(API_URL, {
+        method: "PUT", 
         body: JSON.stringify(apiRequest),
         headers : { 
             'Content-Type': 'application/json',
