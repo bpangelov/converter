@@ -12,9 +12,9 @@ class ConfigRepository {
     public function save($config) {
         $statement = "
             INSERT INTO configs 
-                (id, name, input_format, output_format, tabulation)
+                (id, name, input_format, output_format, tabulation, property_case)
             VALUES
-                (:id, :name, :inputFormat, :outputFormat, :tabulation);
+                (:id, :name, :inputFormat, :outputFormat, :tabulation, :propertyCase);
         ";
 
         try {
@@ -25,6 +25,7 @@ class ConfigRepository {
                 'inputFormat'  => $config->getInputFormat(),
                 'outputFormat' => $config->getOutputFormat(),
                 'tabulation' => $config->getTabulation(),
+                'propertyCase' => $config->getPropertyCase()
             ));
             return $config;
         } catch (PDOException $e) {
@@ -35,7 +36,8 @@ class ConfigRepository {
 
     public function getIfOwnedOrSharedWithUser($configName, $userId) {
         $statement = "
-            SELECT configs.id, name, input_format, output_format, tabulation FROM configs 
+            SELECT configs.id, name, input_format, output_format, tabulation, property_case 
+            FROM configs 
             JOIN transformations ON configs.id = transformations.config_id
             LEFT JOIN shares ON shares.transformation_id = transformations.id
             WHERE configs.name = :configName AND (transformations.user_id = :userId OR shares.user_id = :userId);
@@ -74,7 +76,7 @@ class ConfigRepository {
     public function update($id, $config) {
         $statement = "
             UPDATE configs
-            SET input_format = :inputFormat, output_format = :outputFormat, tabulation = :tabulation
+            SET input_format = :inputFormat, output_format = :outputFormat, tabulation = :tabulation, property_case = :propertyCase
             WHERE id = :id;
         ";
 
@@ -85,6 +87,7 @@ class ConfigRepository {
                 'inputFormat'  => $config->getInputFormat(),
                 'outputFormat' => $config->getOutputFormat(),
                 'tabulation' => $config->getTabulation(),
+                'propertyCase' => $config->getPropertyCase()
             ));
             $result = $this->getSingle($id);
             return $result;

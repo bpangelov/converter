@@ -1,5 +1,24 @@
 <?php
 
+function camelToSnake($camel) {
+    if (strpos($camel, "_") || strpos($camel, "-")) {
+        http_response_code(400);
+        exit("Invalid camel case property");
+    }
+
+    $snake = preg_replace('/[A-Z]/', '_$0', $camel);
+    $snake = strtolower($snake);
+    $snake = ltrim($snake, '_');
+    return $snake;
+}
+
+function snakeToCamel($snake) {
+    $snake = preg_replace_callback('/_[a-z0-9]/', function ($match){
+        return strtoupper($match[1]);
+    }, $snake);
+    return $snake;
+}
+
 abstract class Converter {
     protected $config;
 
@@ -8,14 +27,51 @@ abstract class Converter {
     }
 
     /**
-     * Convert file from input type to target type
+     * Convert file from input type to target type, applying transformations
      */
-    abstract public function convert($input);
+    public function convert($input) {
+        //var_dump($this->config->getJson());
+        $caseConverted = $this->changePropertyCase($input);
+        $encoded = $this->encode($caseConverted);
+        $tabFormatted = $this->formatString($encoded);
+        return $tabFormatted;
+    }
 
     /**
      * Add tabulation and other formats to converted file.
      */
     abstract protected function formatString($str);
+
+    /**
+     * Convert from associative array to encoded string.
+     */
+    abstract protected function encode($map);
+
+    /**
+     * Change the case of properties.
+     */
+    private function changePropertyCase($map) {
+        switch ($this->config->getPropertyCase()) {
+            case "snake":
+                return $this->changeCase($map, 'camelToSnake');
+            case "camel":
+                return $this->changeCase($map, 'snakeToCamel');
+            default:
+                http_response_code(400);
+                exit("Unknown property case format");
+        }
+    }
+
+    private function changeCase($map, $mapper) {
+        $res = array();
+        foreach ($map as $key=>$val) {
+            if (is_array($val)) {
+                $val = $this->changeCase($val, $mapper);
+            }
+            $res[$mapper($key)] = $val;
+        }
+        return $res;
+    }
 }
 
 class JsonConverter extends Converter {
@@ -44,10 +100,8 @@ class JsonConverter extends Converter {
         return $result;
     }
 
-    public function convert($input) {
-        $jsonString = json_encode($input);
-        $formated = $this->formatString($jsonString);
-        return  $formated;
+    protected function encode($input) {
+        return json_encode($input);
     } 
 }
 
@@ -94,9 +148,8 @@ class YamlConverter extends Converter {
         return $result;
     }
 
-    public function convert($input) {
-        $yamlString = yaml_emit($input);
-        return $this->formatString($yamlString);
+    public function encode($input) {
+        return yaml_emit($input);
     }
 }
 

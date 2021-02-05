@@ -22,6 +22,11 @@ Config:<br>
     </select><br>
     <label for="tabulation">Count of spaces for tabulation:</label>
     <input type="number" id="tabulation" name="quantity" min="1" value="3"><br>
+    <label for="property_case">Property case:</label>
+    <select id="property_case" name="property_case">
+        <option value="snake">snake</option>
+        <option value="camel">camel</option>
+    </select><br>
     <div id="if_save" style="visibility:hidden">
         <label for="config_name">Name of configuration:</label>
         <input id="config_name"/><br>
@@ -97,6 +102,7 @@ function getTransformation(id) {
             document.getElementById("config_input").value = data.config.inputFormat;
             document.getElementById("config_output").value = data.config.outputFormat;
             document.getElementById("tabulation").value = data.config.tabulation;
+            document.getElementById("property_case").value = data.config.propertyCase;
             document.getElementById('save_check').checked = true;
             document.getElementById("file_name").value = data.fileName;
             document.getElementById("textarea_input").value = data.originalFile;
@@ -117,15 +123,16 @@ function submit() {
     dissableModification();
     let apiRequest = {
         "config": {
-            "name":        document.getElementById("config_name").value,
-            "inputFormat": document.getElementById("config_input").value,
-            "outputFormat":document.getElementById("config_output").value,
-            "tabulation":  document.getElementById("tabulation").value,
+            "name":         document.getElementById("config_name").value,
+            "inputFormat":  document.getElementById("config_input").value,
+            "outputFormat": document.getElementById("config_output").value,
+            "tabulation":   document.getElementById("tabulation").value,
+            "propertyCase": document.getElementById("property_case").value
         },
-        "save":            document.getElementById('save_check').checked,
-        "fileName":        document.getElementById("file_name").value,
-        "inputFileContent":document.getElementById("textarea_input").value,
-        "shareWith":       document.getElementById("share_with").value
+        "save":             document.getElementById('save_check').checked,
+        "fileName":         document.getElementById("file_name").value,
+        "inputFileContent": document.getElementById("textarea_input").value,
+        "shareWith":        document.getElementById("share_with").value
     };
 
     fetch(API_URL, {
@@ -155,6 +162,7 @@ function update() {
             "inputFormat":  document.getElementById("config_input").value,
             "outputFormat": document.getElementById("config_output").value,
             "tabulation":   document.getElementById("tabulation").value,
+            "propertyCase": document.getElementById("property_case").value
         },
         "save":             document.getElementById('save_check').checked,
         "fileName":         document.getElementById("file_name").value,
@@ -211,6 +219,7 @@ function resetAll() {
     document.getElementById("config_input").value = "json";
     document.getElementById("config_output").value = "json";
     document.getElementById("tabulation").value = 3;
+    document.getElementById("property_case").value = "camel";
     document.getElementById('save_check').checked = false;
     document.getElementById("textarea_input").value = "";
     document.getElementById("textarea_output").value = "";

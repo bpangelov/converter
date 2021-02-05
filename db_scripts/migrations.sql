@@ -9,7 +9,8 @@ CREATE TABLE configs (
     name varchar(255) NOT NULL,
     input_format varchar(255) NOT NULL,
     output_format varchar(255) NOT NULL,
-    tabulation varchar(255)
+    tabulation INT,
+    property_case varchar(50)
 );
 
 CREATE TABLE users (
