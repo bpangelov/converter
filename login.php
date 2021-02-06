@@ -6,7 +6,7 @@ session_start();
 
 // If user is logged in redirect to converter.
 if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
-	header("Location: converter.html");
+	header("Location: converter.php");
 	exit();
 }
 
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 				$_SESSION["id"] = $user["id"];
 				$_SESSION["username"] = $user["username"];
 
-				header("Location: converter.html");
+				header("Location: converter.php");
 			} else {
 				$passwordErr = "Грешна парола.";
 			}
@@ -96,6 +96,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 								</div>
 								<div class="mt-4 text-center">
 									Нямаш акаунт? <a href="register.php">Регистрирай се</a>
+								</div>
+								<div class="mt-4 text-center">
+									<a href="converter.php">Продължи като гост</a>
 								</div>
 							</form>
 						</div>

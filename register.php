@@ -102,6 +102,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 								<div class="mt-4 text-center">
 									Вече имаш регистрация? <a href="login.php">Влез в профила си</a>
 								</div>
+								<div class="mt-4 text-center">
+									<a href="converter.php">Продължи като гост</a>
+								</div>
 							</form>
 						</div>
 					</div>
