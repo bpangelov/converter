@@ -49,15 +49,13 @@ class Config {
         if (property_exists($cnf, 'tabulation')) {
             $json["tabulation"] = $cnf->tabulation;
         } else {
-            http_response_code(400);
-            exit("Tabulation not set");
+            $json["tabulation"] = 4;
         }
 
         if (property_exists($cnf, 'propertyCase')) {
             $json["propertyCase"] = $cnf->propertyCase;
         } else {
-            http_response_code(400);
-            exit("Property case is not set");
+            $json["propertyCase"] = "none";
         }
 
         if (property_exists($cnf, 'inputFormat')) {

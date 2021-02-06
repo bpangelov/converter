@@ -34,8 +34,7 @@ class ApiRequest {
         if (property_exists($data, 'save')) {
             $this->save = $data->save;
         } else {
-            http_response_code(400);
-            exit("Save flag required");
+            $this->save = false;
         }
 
         if (property_exists($data, 'fileName')) {
@@ -45,6 +44,9 @@ class ApiRequest {
         if (property_exists($data, 'config')) {
             $cnf = $data->config;
             $this->config = Config::fromJson($cnf);
+        } else {
+            http_response_code(400);
+            exit("Config is required");
         }
 
         if (property_exists($data, 'shareWith')) {
@@ -120,7 +122,7 @@ class ConverterController {
         if (isset($_SESSION["id"])) {
             $userID = $_SESSION["id"];
         } else {
-            http_response_code(403);
+            http_response_code(401);
             exit();
         }
 
@@ -150,7 +152,7 @@ class ConverterController {
         if (isset($_SESSION["id"])) {
             $userID = $_SESSION["id"];
         } else {
-            http_response_code(403);
+            http_response_code(401);
             exit();
         }
 

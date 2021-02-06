@@ -90,11 +90,12 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                 <div class="input-group mb-3">
                     <input class="form-control" type="number" id="tabulation" value=4>
                 </div>
-                <label for="propertyCase">Формат на наименованe</label>
+                <label for="propertyCase">Формат на полетата</label>
                 <div class="input-group mb-3">
                     <select class="form-control" id="propertyCase">
-                        <option value="1">Snake case</option>
-                        <option value="2">Camel case</option>
+                        <option value="1">None</option>
+                        <option value="2">Snake case</option>
+                        <option value="3">Camel case</option>
                     </select>
                 </div>
 

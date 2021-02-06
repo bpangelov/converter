@@ -56,6 +56,8 @@ abstract class Converter {
                 return $this->changeCase($map, 'camelToSnake');
             case "camel":
                 return $this->changeCase($map, 'snakeToCamel');
+            case "none":
+                return $map;
             default:
                 http_response_code(400);
                 exit("Unknown property case format");
