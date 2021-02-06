@@ -1,8 +1,6 @@
 const API_URL = "http://localhost/converter/api/transformations";
 
 const convert = () => {
-    document.getElementById("converterOutput").value = "";
-
     const propCaseOption = document.getElementById("propertyCase").value
     const propertyCase = propCaseOption == 1 ? "none" : propCaseOption == 2 ? "snake" : "camel";
     const apiRequest = {

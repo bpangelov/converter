@@ -13,7 +13,7 @@ class ConfigController {
         $this->requestMethod = $requestMethod;
         $this->name = $name;
         $db = new DB();
-        $configRepo = new ConfigRepository($db->getConnection());
+        $this->configRepo = new ConfigRepository($db->getConnection());
     }
 
     public function handleRequest() {
@@ -47,10 +47,10 @@ class ConfigController {
             http_response_code(401);
             exit("user is not logged in");
         }
-        $config = $configRepo->getIfOwned($name, $userID);
+        $config = $this->configRepo->getIfOwned($name, $userID);
 
         if ($config == null) {
-            $config = $configRepo->getSharedWithUser($name, $userID);
+            $config = $this->configRepo->getSharedWithUser($name, $userID);
             if ($config == null) {
                 http_response_code(404);
                 exit("Config doesn't exist for user");
@@ -69,12 +69,12 @@ class ConfigController {
             exit("user is not logged in");
         }
 
-        $config = $configRepo->getIfOwned($name, $userID);
+        $config = $this->configRepo->getIfOwned($name, $userID);
         if ($config == null) {
             http_response_code(204);
             return array();
         }
-        $configRepo->delete($config->getId());
+        $this->configRepo->delete($config->getId());
     }
 }
 

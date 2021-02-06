@@ -33,6 +33,10 @@ if ($uri[1] == 'api') {
         $controller = new ConfigController($requestMethod, $configName);
         $controller->handleRequest();
         exit();
+    } else if ($uri[2] == 'share') {
+        $controller = new SharesController($requestMethod);
+        $controller->handleRequest();
+        exit();
     } else {
         http_response_code(404); 
         exit();
