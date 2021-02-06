@@ -107,7 +107,7 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
         </div>
         <div class="row">
             <div class="col-md-3">
-                <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput"))'>
+                <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput")); this.value=null'>
             </div>
         </div>
     </div>

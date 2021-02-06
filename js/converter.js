@@ -94,7 +94,7 @@ document.getElementById('converterInput').addEventListener('keydown', function(e
 });
 
 function onFileLoad(elementId, event) {
-    document.getElementById(elementId).innerText = event.target.result;
+    document.getElementById(elementId).value = event.target.result;
 }
 
 function onChooseFile(event, onLoadFileHandler) {
