@@ -4,6 +4,7 @@ $mapping = [
    
     // app classes
     'ConverterController' => './src/ConverterController.php',
+    'ConfigController' => './src/ConfigController.php'
  ];
 
 //----------------------------------------------------------------------------------------------------------------------

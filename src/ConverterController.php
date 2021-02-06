@@ -189,7 +189,7 @@ class ConverterController {
             // Save config in db if it doesn't exist
             $db = new DB();
             $configRepo = new ConfigRepository($db->getConnection());
-            $config = $configRepo->getIfOwnedOrSharedWithUser($requestDto->getConfig()->getName(), $userID);
+            $config = $configRepo->getIfOwned($requestDto->getConfig()->getName(), $userID);
 
             if ($config == null) {
                 $config = $configRepo->save($requestDto->getConfig());
@@ -249,11 +249,14 @@ class ConverterController {
         $db = new DB();
         $configRepo = new ConfigRepository($db->getConnection());
         $transformationRepo = new TransformationRepository($db->getConnection());
-        $config = $configRepo->getIfOwnedOrSharedWithUser($requestDto->getConfig()->getName(), $userID);
+        $config = $configRepo->getIfOwned($requestDto->getConfig()->getName(), $userID);
 
         if ($config == null) {
-            http_response_code(404);
-            exit("Config doesn't exist for user");
+            $config = $configRepo->getSharedWithUser($requestDto->getConfig()->getName(), $userID);
+            if ($config == null) {
+                http_response_code(404);
+                exit("Config doesn't exist for user");
+            }
         }
 
         $transformation = $transformationRepo->getByConfigAndFile($config, $requestDto->getFileName());
@@ -319,11 +322,9 @@ class ConverterController {
 
         $fileOriginal = $transformation["inputFileName"];
         $fileConverted = $transformation["outputFileName"];
-        $configId = $transformation["configId"];
 
         $sharesRepo->deleteShares($id);
         $transformationRepo->delete($id);
-        $configRepo->delete($configId);
 
         // Delete files
         unlink(FILE_PATH . $fileOriginal);

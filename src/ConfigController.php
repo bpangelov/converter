@@ -1,0 +1,81 @@
+<?php
+
+require_once "./src/dtos/Config.php";
+require_once "./src/db.php";
+require_once "./src/repositories/ConfigRepository.php";
+
+class ConfigController {
+    private $requestMethod;
+    private $name;
+    private $configRepo;
+
+    public function __construct($requestMethod, $name) {
+        $this->requestMethod = $requestMethod;
+        $this->name = $name;
+        $db = new DB();
+        $configRepo = new ConfigRepository($db->getConnection());
+    }
+
+    public function handleRequest() {
+        switch ($this->requestMethod) {
+            case 'GET':
+                if ($this->name) {
+                    $response = $this->getSingle($this->name);
+                } else {
+                    http_response_code(404);
+                    exit();
+                };
+                break;
+            case 'DELETE':
+                $response = $this->delete($this->name);
+                break;
+            default:
+                http_response_code(404);
+                exit();
+        }
+        if (array_key_exists('body', $response)) {
+            echo $response['body'];
+        }
+    }
+
+    public function getSingle($name) {
+        $userID = "";
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            http_response_code(401);
+            exit("user is not logged in");
+        }
+        $config = $configRepo->getIfOwned($name, $userID);
+
+        if ($config == null) {
+            $config = $configRepo->getSharedWithUser($name, $userID);
+            if ($config == null) {
+                http_response_code(404);
+                exit("Config doesn't exist for user");
+            }
+        }
+        return $config->getJson();
+    }
+
+    public function delete($name) {
+        $userID = "";
+        session_start();
+        if (isset($_SESSION["id"])) {
+            $userID = $_SESSION["id"];
+        } else {
+            http_response_code(401);
+            exit("user is not logged in");
+        }
+
+        $config = $configRepo->getIfOwned($name, $userID);
+        if ($config == null) {
+            http_response_code(204);
+            return array();
+        }
+        $configRepo->delete($config->getId());
+    }
+}
+
+?>

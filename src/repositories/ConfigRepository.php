@@ -34,13 +34,35 @@ class ConfigRepository {
         }  
     }
 
-    public function getIfOwnedOrSharedWithUser($configName, $userId) {
+    public function getSharedWithUser($configName, $userId) {
         $statement = "
             SELECT configs.id, name, input_format, output_format, tabulation, property_case 
             FROM configs 
             JOIN transformations ON configs.id = transformations.config_id
             LEFT JOIN shares ON shares.transformation_id = transformations.id
-            WHERE configs.name = :configName AND (transformations.user_id = :userId OR shares.user_id = :userId);
+            WHERE configs.name = :configName AND shares.user_id = :userId;
+        ";
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array("userId" => $userId, "configName" => $configName));
+            $result = $fetch->fetch();
+            
+            if (!$result || $result == "") {
+                return null;
+            }
+            return Config::fromDatabaseEntry($result);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
+    }
+
+    public function getIfOwned($configName, $userId) {
+        $statement = "
+            SELECT configs.id, name, input_format, output_format, tabulation, property_case 
+            FROM configs 
+            JOIN transformations ON configs.id = transformations.config_id
+            WHERE configs.name = :configName AND transformations.user_id = :userId;
         ";
         try {
             $fetch = $this->connection->prepare($statement);

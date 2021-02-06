@@ -24,6 +24,15 @@ if ($uri[1] == 'api') {
         $controller = new ConverterController($requestMethod, $id);
         $controller->handleRequest();
         exit();
+    } else if ($uri[2] == 'configs') {
+        $configName = null;
+        if (isset($uri[3])) {
+            $configName = (int) $uri[3];
+        }
+
+        $controller = new ConfigController($requestMethod, $configName);
+        $controller->handleRequest();
+        exit();
     } else {
         http_response_code(404); 
         exit();
