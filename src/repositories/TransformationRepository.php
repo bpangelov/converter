@@ -83,6 +83,26 @@ class TransformationRepository {
         }
     }
 
+    public function getByConfigId($config) {
+        $statement = "
+            SELECT * FROM transformations WHERE config_id = :id";
+
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array(
+                "id" => $config->getId(),
+            ));
+            $rows = $fetch->fetchAll();
+            if (!$rows || $rows == "") {
+                return null;
+            }
+            return $rows;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
+    }
+
     public function getSingle($id) {
         $statement = "
             SELECT * FROM transformations WHERE id = ?;

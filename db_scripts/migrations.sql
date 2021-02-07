@@ -6,6 +6,7 @@ USE converter;
 
 CREATE TABLE configs (
     id varchar(255) NOT NULL PRIMARY KEY,
+    user_id INT NOT NULL,
     name varchar(255) NOT NULL,
     input_format varchar(255) NOT NULL,
     output_format varchar(255) NOT NULL,

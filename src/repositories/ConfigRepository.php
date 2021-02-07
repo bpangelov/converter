@@ -9,18 +9,19 @@ class ConfigRepository {
         $this->connection = $connection;
     }
 
-    public function save($config) {
+    public function save($config, $userId) {
         $statement = "
             INSERT INTO configs 
-                (id, name, input_format, output_format, tabulation, property_case)
+                (id, user_id, name, input_format, output_format, tabulation, property_case)
             VALUES
-                (:id, :name, :inputFormat, :outputFormat, :tabulation, :propertyCase);
+                (:id, :userId, :name, :inputFormat, :outputFormat, :tabulation, :propertyCase);
         ";
 
         try {
             $statement = $this->connection->prepare($statement);
             $statement->execute(array(
                 'id' => $config->getId(),
+                'userId' => $userId,
                 'name' => $config->getName(),
                 'inputFormat'  => $config->getInputFormat(),
                 'outputFormat' => $config->getOutputFormat(),
@@ -61,8 +62,7 @@ class ConfigRepository {
         $statement = "
             SELECT configs.id, name, input_format, output_format, tabulation, property_case 
             FROM configs 
-            JOIN transformations ON configs.id = transformations.config_id
-            WHERE configs.name = :configName AND transformations.user_id = :userId;
+            WHERE configs.name = :configName AND user_id = :userId;
         ";
         try {
             $fetch = $this->connection->prepare($statement);
@@ -89,6 +89,58 @@ class ConfigRepository {
             $fetch->execute(array($id));
             $result = $fetch->fetch();
             return Config::fromDatabaseEntry($result);;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
+    }
+
+    public function getAllOwned($userId) {
+        $statement = "
+            SELECT * 
+            FROM configs 
+            WHERE user_id = :userId;
+        ";
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array("userId" => $userId));
+            $result = $fetch->fetchAll();
+            
+            if (!$result || $result == "") {
+                return null;
+            }
+            $toReturn = array();
+            foreach ($result as $configEntry) {
+                array_push($toReturn, Config::fromDatabaseEntry($configEntry)->getJson());
+            }
+            return $toReturn;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            exit($e->getMessage());
+        }
+    }
+
+    public function getAllSharedWithUser($userId) {
+        $statement = "
+            SELECT configs.id, name, input_format, output_format, tabulation, property_case 
+            FROM configs 
+            JOIN transformations ON configs.id = transformations.config_id
+            LEFT JOIN shares ON shares.transformation_id = transformations.id
+            WHERE shares.user_id = :userId;
+        ";
+        try {
+            $fetch = $this->connection->prepare($statement);
+            $fetch->execute(array("userId" => $userId));
+            $result = $fetch->fetchAll();
+            
+            if (!$result || $result == "") {
+                return null;
+            }
+            $toReturn = array();
+            foreach ($result as $configEntry) {
+                array_push($toReturn, Config::fromDatabaseEntry($configEntry)->getJson());
+            }
+            return $toReturn;
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());

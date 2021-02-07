@@ -163,10 +163,14 @@ class ConverterController {
         $sharesRepo = new SharesRepository($db->getConnection());
         $sharedEntries = $sharesRepo->getSharedTransformations($userID);
 
+        $configRepo = new ConfigRepository($db->getConnection());
+        $configs = $configRepo->getAllOwned($userID);
+        $sharedConfigs = $configRepo->getAllSharedWithUser($userID);
+
         http_response_code(200);
         header('Content-Type: application/json');
-        $response['body'] = json_encode(array("historyEntries" => $historyEntries,
-            "sharedEntries" => $sharedEntries));
+        $response['body'] = json_encode(array("historyEntries" => $historyEntries, "historyConfigs" => ($configs == null) ? array() : $configs,
+            "sharedEntries" => $sharedEntries, "sharedConfigs" => ($sharedConfigs == null) ? array() : $sharedConfigs));
         return $response;
     }
 
@@ -192,7 +196,7 @@ class ConverterController {
             $config = $configRepo->getIfOwned($requestDto->getConfig()->getName(), $userID);
 
             if ($config == null) {
-                $config = $configRepo->save($requestDto->getConfig());
+                $config = $configRepo->save($requestDto->getConfig(), $userID);
             } else if (!$config->isSameAs($requestDto->getConfig())) {
                 http_response_code(405);
                 exit("Modifying config is not allowed with this method");

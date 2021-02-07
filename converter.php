@@ -121,7 +121,8 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                 <div class="input-group mb-3">
                     <label><input type="checkbox" onclick="saveCheck();" class="checkbox" id="saveCheck"/> Запази в историята</label>
                 </div>
-                <button type="button" class="btn btn-primary mx-auto d-block" id="convert-btn" onclick="convert()">Конвертиране</button>
+                <button type="button" class="btn btn-primary mx-auto d-block btn-block" id="convert-btn" onclick="convert()">Конвертиране</button>
+                <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
             </div>
             <div class="col-md-5">
                 <textarea class="form-control" rows="25" placeholder="Изход" id="converterOutput"></textarea>

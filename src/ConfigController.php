@@ -3,17 +3,20 @@
 require_once "./src/dtos/Config.php";
 require_once "./src/db.php";
 require_once "./src/repositories/ConfigRepository.php";
+require_once "./src/repositories/TransformationRepository.php";
 
 class ConfigController {
     private $requestMethod;
     private $name;
     private $configRepo;
+    private $transformationRepo;
 
     public function __construct($requestMethod, $name) {
         $this->requestMethod = $requestMethod;
         $this->name = $name;
         $db = new DB();
         $this->configRepo = new ConfigRepository($db->getConnection());
+        $this->transformationRepo = new TransformationRepository($db->getConnection());
     }
 
     public function handleRequest() {
@@ -75,8 +78,15 @@ class ConfigController {
             http_response_code(204);
             return array();
         }
-        $this->configRepo->delete($config->getId());
-        return array();
+
+        $allTr = $this->transformationRepo->getByConfigId($config);
+        if ($allTr == null) {
+            $this->configRepo->delete($config->getId());
+            return array();
+        } else {
+            http_response_code(409);
+            exit("Config sitll in use");
+        }
     }
 }
 

@@ -2,10 +2,10 @@ const API_URL = "http://localhost/converter/api/";
 const TRANSFORMATIONS_URL = API_URL + "transformations";
 const CONFIGS_URL = API_URL + "configs";
 
-const convert = () => {
+const transformationsApiRequest = () => {
     const propCaseOption = document.getElementById("propertyCase").value
     const propertyCase = propCaseOption == 1 ? "none" : propCaseOption == 2 ? "snake" : "camel";
-    const apiRequest = {
+    return {
         "config": {
             "name":         document.getElementById("configName").value,
             "inputFormat":  document.getElementById("inputFormat").value,
@@ -18,7 +18,10 @@ const convert = () => {
         "inputFileContent": document.getElementById("converterInput").value,
         "shareWith":        "",
     };
+}
 
+const convert = () => {
+    const apiRequest = transformationsApiRequest();
     fetch(TRANSFORMATIONS_URL, {
         method: "POST", 
         body: JSON.stringify(apiRequest),
@@ -37,6 +40,47 @@ const convert = () => {
     });
 }
 
+const update = () => {
+    const apiRequest = transformationsApiRequest();
+    fetch(TRANSFORMATIONS_URL, {
+        method: "PUT", 
+        body: JSON.stringify(apiRequest),
+        headers : { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(response => {
+        document.getElementById("converterOutput").value = response.convertedFile;
+        populateHistory();
+    })
+    .catch(err => {
+        console.log('Fetch Error :', err);
+    });
+}
+
+function getHistoryEntry(name, getHandler, removeHanler, allowDelete) {
+    const historyItem = document.createElement('div');
+    historyItem.className = "dropdown-item";
+
+    const getLink = document.createElement('a');
+    getLink.innerHTML = name;
+    getLink.onclick = getHandler;
+    historyItem.appendChild(getLink);
+
+    if (allowDelete) {
+        const removeLink = document.createElement('span');
+        removeLink.className = "badge";
+        removeLink.innerHTML = "премахване";
+        removeLink.style.color = "red";
+        removeLink.onclick = removeHanler;
+        historyItem.appendChild(removeLink);
+    }
+
+    return historyItem;
+}
+
 const populateHistory = () => {
     fetch(TRANSFORMATIONS_URL)
         .then(response => response.json())
@@ -46,16 +90,14 @@ const populateHistory = () => {
             const configs = document.getElementById("configs");
             configs.innerHTML = '';
             data.historyEntries.forEach(entry => {
-                const historyItem = document.createElement('a');
-                historyItem.className = "dropdown-item";
-                historyItem.innerHTML = entry.fileName;
-                historyItem.onclick = () => getTransformation(entry.id);
+                const historyItem =  getHistoryEntry(entry.fileName, () => getTransformation(entry.id), 
+                    () => removeTransformation(entry.id), true);
                 historyItems.appendChild(historyItem);
+            });
 
-                const cnf = document.createElement('a');
-                cnf.className = "dropdown-item";
-                cnf.innerHTML = entry.configName;
-                cnf.onclick = () => getConfig(entry.configName);
+            data.historyConfigs.forEach(entry => {
+                const cnf =  getHistoryEntry(entry.name, () => getConfig(entry.name), 
+                    () => removeConfig(entry.name), true);
                 configs.appendChild(cnf);
             });
 
@@ -64,18 +106,16 @@ const populateHistory = () => {
             const sharedConfigs = document.getElementById("sharedConfigs");
             sharedConfigs.innerHTML = '';
             data.sharedEntries.forEach(entry => {
-                const sharedItem = document.createElement('a');
-                sharedItem.className = "dropdown-item";
-                sharedItem.innerHTML = entry.fileName;
-                sharedItem.onclick = () => getTransformation(entry.transformationID);
+                const sharedItem = getHistoryEntry(entry.fileName, () => getTransformation(entry.transformationID), 
+                    () => removeTransformation(entry.transformationID), true);
                 sharedItems.appendChild(sharedItem);
-
-                const cnf = document.createElement('a');
-                cnf.className = "dropdown-item";
-                cnf.innerHTML = entry.configName;
-                cnf.onclick = () => getConfig(entry.configName);
-                sharedConfigs.appendChild(cnf);
             })
+
+            data.sharedConfigs.forEach(entry => {
+                const cnf =  getHistoryEntry(entry.name, () => getConfig(entry.name), 
+                    () => removeConfig(entry.name), false);
+                sharedConfigs.appendChild(cnf);
+            });
         }).catch(function(err) {
             console.log('Fetch Error :', err);
         });
@@ -119,6 +159,34 @@ document.getElementById('converterInput').addEventListener('keydown', function(e
         this.selectionEnd = start + 1;
     }
 });
+
+function removeConfig(name) {
+    fetch(CONFIGS_URL + "/" + name, {
+        method: "DELETE", 
+    })
+    .then(response => {
+        console.log('Item deleted');
+        console.log(response);
+        populateHistory();
+    })
+    .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+    });
+}
+
+function removeTransformation(id) {
+    fetch(TRANSFORMATIONS_URL + "/" + id, {
+        method: "DELETE", 
+    })
+    .then(response => {
+        console.log('Item deleted');
+        console.log(response);
+        populateHistory();
+    })
+    .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+    });
+}
 
 function onFileLoad(elementId, event) {
     document.getElementById(elementId).value = event.target.result;
