@@ -155,6 +155,41 @@ class YamlConverter extends Converter {
     }
 }
 
+class XMLConverter extends Converter {
+    public function __construct($config) {
+        parent::__construct($config);
+    }
+
+    protected function encode($input) {
+        $tabulation = str_repeat(" ", $this->config->getTabulation());
+        return $this->arrayToXML($input, $tabulation, 0);
+    }
+
+    protected function formatString($str) {
+        return $str;
+    }
+
+    private function arrayToXML($array, $tab, $tabCount, $root = true) {
+        $result = "";
+        if($root) {
+            $result = "<root>\n";
+        }
+        foreach($array as $key => $value) {
+            if(is_array($value)) {
+                $result .= str_repeat($tab, $tabCount) . "<$key>\n" . 
+                            $this->arrayToXML($value, $tab, $tabCount + 1, false) . 
+                            str_repeat($tab, $tabCount) . "</$key>\n";
+            } else {
+                $result .= str_repeat($tab, $tabCount) . "<$key>$value</$key>\n";
+            }
+        }
+        if($root) {
+            $result .= "</root>";
+        }
+        return $result;
+    }
+}
+
 class ConverterFactory {
     public function __construct() {
     }
@@ -165,6 +200,8 @@ class ConverterFactory {
                 return new JsonConverter($config);
             case 'yaml':
                 return new YamlConverter($config);
+            case 'xml':
+                return new XMLConverter($config);
             default:
                 http_response_code(400);
                 exit("Unknown output format");

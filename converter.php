@@ -89,6 +89,7 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                     <select class="form-control" id="inputFormat">
                         <option>json</option>
                         <option>yaml</option>
+                        <option>xml</option>
                     </select>
                     <div class="input-group-prepend">
                         <span class="input-group-text">към</span>
@@ -96,6 +97,7 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                     <select class="form-control" id="outputFormat">
                         <option>json</option>
                         <option>yaml</option>
+                        <option>xml</option>
                     </select>
                 </div>
                 <label for="tabulation">Спейсове в табулация</label>
