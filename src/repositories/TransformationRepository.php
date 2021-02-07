@@ -27,7 +27,7 @@ class TransformationRepository {
                 'output_file_name' => $outputFileName,
                 'input_file_name' => $inputFileName
             ));
-            return $statement->rowCount();
+            return $this->connection->lastInsertId();
         } catch (PDOException $e) {
             http_response_code(500);
             exit($e->getMessage());
@@ -115,7 +115,7 @@ class TransformationRepository {
             if (!$row || $row == "") {
                 return null;
             }
-            return array("id" => $row["id"], "configId"=> $row["config_id"], 
+            return array("id" => $row["id"], "configId"=> $row["config_id"], "userId" => $row["user_id"],
                 "fileName" => $row["file_name"], "inputFileName" => $row["input_file_name"], 
                 "outputFileName" => $row["output_file_name"]);
         } catch (PDOException $e) {

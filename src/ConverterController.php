@@ -123,13 +123,18 @@ class ConverterController {
             $userID = $_SESSION["id"];
         } else {
             http_response_code(401);
-            exit();
+            exit("user is not logged in");
         }
 
         $db = new DB();
         // Get transformation
         $transformationRepo = new TransformationRepository($db->getConnection());
         $historyEntry = $transformationRepo->getSingle($transformationId);
+
+        if (empty($historyEntry)) {
+            http_response_code(404);
+            exit("transformation doesn't exist");
+        }
 
         // Get config
         $configRepo = new ConfigRepository($db->getConnection());
@@ -153,7 +158,7 @@ class ConverterController {
             $userID = $_SESSION["id"];
         } else {
             http_response_code(401);
-            exit();
+            exit("user is not logged in");
         }
 
         $db = new DB();
@@ -214,8 +219,7 @@ class ConverterController {
                                     $config->getId() . "." . 
                                     $config->getOutputFormat();
 
-                $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
-                $transformation = $transformationRepo->getByConfigAndFile($config, $requestDto->getFileName());
+                $id = $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
 
                 $filePath = FILE_PATH . $outputFileName;
                 $filePathOriginal = FILE_PATH . $inputFileName;
@@ -233,7 +237,12 @@ class ConverterController {
         
         http_response_code(201);
         header('Content-Type: application/json');
-        $response['body'] = json_encode(array("convertedFile" => $resultBody));
+        $result = array("convertedFile" => $resultBody);
+        if (isset($id)) {
+            $result["id"] = $id;
+        }
+
+        $response['body'] = json_encode($result);
         return $response;
     }
 
@@ -299,7 +308,10 @@ class ConverterController {
 
         http_response_code(200);
         header('Content-Type: application/json');
-        $response['body'] = json_encode(array("convertedFile" => $resultConverted));
+        $response['body'] = json_encode(array(
+            "convertedFile" => $resultConverted,
+            "id" => $transformation["id"]
+        ));
         return $response;
     }
 
@@ -314,7 +326,6 @@ class ConverterController {
         }
 
         $db = new DB();
-        $configRepo = new ConfigRepository($db->getConnection());
         $transformationRepo = new TransformationRepository($db->getConnection());
         $sharesRepo = new SharesRepository($db->getConnection());
 

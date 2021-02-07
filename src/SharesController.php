@@ -1,5 +1,9 @@
 <?php
 
+require_once "./src/db.php";
+require_once "./src/repositories/TransformationRepository.php";
+require_once "./src/repositories/SharesRepository.php";
+
 class ApiRequest {
     private $userID;
     private $transformationID;
@@ -58,18 +62,16 @@ class SharesController {
 
         session_start();
         if (isset($_SESSION["id"])) {
-            $ownerID = $_SESSION["id"];
+            $userID = $_SESSION["id"];
         } else {
             http_response_code(401);
             exit();
         }
-
         $db = new DB();
-
         // Check if transformation is owned by the current user.
         $transformationRepo = new TransformationRepository($db->getConnection());
         $transformation = $transformationRepo->getSingle($request->getTransformationID());
-        if ($transformation["user_id"] != $ownerID) {
+        if ($transformation["userId"] != $userID) {
             http_response_code(401);
             exit();
         }

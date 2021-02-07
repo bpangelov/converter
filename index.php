@@ -14,7 +14,6 @@ $requestMethod = $_SERVER["REQUEST_METHOD"];
 
 // pass the request method to Controller
 if ($uri[1] == 'api') {
-
     if ($uri[2] == 'transformations') {
         $id = null;
         if (isset($uri[3])) {

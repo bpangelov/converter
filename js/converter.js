@@ -1,6 +1,9 @@
 const API_URL = "http://localhost/converter/api/";
 const TRANSFORMATIONS_URL = API_URL + "transformations";
 const CONFIGS_URL = API_URL + "configs";
+const SHARES_URL = API_URL + "share";
+
+let transformationToShare = null;
 
 const transformationsApiRequest = () => {
     const propCaseOption = document.getElementById("propertyCase").value
@@ -32,6 +35,7 @@ const convert = () => {
     .then(response => response.json())
     .then(response => {
         document.getElementById("converterOutput").value = response.convertedFile;
+        transformationToShare = response.id;
         populateHistory();
     })
     .catch(err => {
@@ -52,7 +56,33 @@ const update = () => {
     .then(response => response.json())
     .then(response => {
         document.getElementById("converterOutput").value = response.convertedFile;
+        transformationToShare = response.id;
         populateHistory();
+    })
+    .catch(err => {
+        console.log('Fetch Error :', err);
+    });
+}
+
+const share = () => {
+    if (!transformationToShare) {
+        return;
+    }
+
+    const request = {
+        "transformationID": transformationToShare,
+        "userID": document.getElementById("usernameShare").value
+    };
+    fetch(SHARES_URL, {
+        method: "POST", 
+        body: JSON.stringify(request),
+        headers : { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log(response);
     })
     .catch(err => {
         console.log('Fetch Error :', err);
@@ -138,6 +168,7 @@ const getTransformation = id => {
             document.getElementById("converterInput").value = data.originalFile;
             document.getElementById("converterOutput").value = data.convertedFile;
             document.getElementById("transformationName").value = data.fileName;
+            transformationToShare = id;
         }).catch(function(err) {
             console.log('Fetch Error :', err);
         });

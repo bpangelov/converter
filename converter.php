@@ -134,10 +134,17 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
             </div>
         </div>
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-2">
                 <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput")); this.value=null'>
+                <label for="usernameShare">Сподели трансформация</label>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Потребителско име" id="usernameShare">
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" id="share-btn" onclick="share()">Сподели</button>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md">
             <button class="btn" id="download-btn"><i class="fa fa-download"></i>Download</button>
             </div>
         </div>
