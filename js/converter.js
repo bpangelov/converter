@@ -4,16 +4,15 @@ const CONFIGS_URL = API_URL + "configs";
 
 const transformationsApiRequest = () => {
     const propCaseOption = document.getElementById("propertyCase").value
-    const propertyCase = propCaseOption == 1 ? "none" : propCaseOption == 2 ? "snake" : "camel";
     return {
         "config": {
             "name":         document.getElementById("configName").value,
             "inputFormat":  document.getElementById("inputFormat").value,
             "outputFormat": document.getElementById("outputFormat").value,
             "tabulation":   document.getElementById("tabulation").value,
-            "propertyCase": propertyCase,
+            "propertyCase": getPropertyCaseFromIndex(propCaseOption),
         },
-        "save":             document.getElementById('saveCheck').checked,
+        "save":             document.getElementById('saveCheckbox').checked,
         "fileName":         document.getElementById("transformationName").value,
         "inputFileContent": document.getElementById("converterInput").value,
         "shareWith":        "",
@@ -107,9 +106,9 @@ const populateHistory = () => {
             sharedConfigs.innerHTML = '';
             data.sharedEntries.forEach(entry => {
                 const sharedItem = getHistoryEntry(entry.fileName, () => getTransformation(entry.transformationID), 
-                    () => removeTransformation(entry.transformationID), true);
+                    () => removeTransformation(entry.transformationID), false);
                 sharedItems.appendChild(sharedItem);
-            })
+            });
 
             data.sharedConfigs.forEach(entry => {
                 const cnf =  getHistoryEntry(entry.name, () => getConfig(entry.name), 
@@ -144,20 +143,24 @@ const getTransformation = id => {
         });
 }
 
-document.getElementById('converterInput').addEventListener('keydown', function(e) {
-    if (e.key == 'Tab') {
-        e.preventDefault();
-        var start = this.selectionStart;
-        var end = this.selectionEnd;
-
-        // set textarea value to: text before caret + tab + text after caret
-        this.value = this.value.substring(0, start) +
-            "\t" + this.value.substring(end);
-
-        // put caret at right position again
-        this.selectionStart =
-        this.selectionEnd = start + 1;
-    }
+const textBoxes = ["converterInput", "converterOutput"];
+textBoxes.forEach(textBox => {
+    document.getElementById(textBox).addEventListener("keydown", function(e) {
+        // Tab should work normally inside the text areas.
+        if (e.key == "Tab") {
+            e.preventDefault();
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+    
+            // set textarea value to: text before caret + tab + text after caret
+            this.value = this.value.substring(0, start) +
+                "\t" + this.value.substring(end);
+    
+            // put caret at right position again
+            this.selectionStart =
+            this.selectionEnd = start + 1;
+        }
+    });
 });
 
 function removeConfig(name) {
@@ -228,5 +231,59 @@ function getPropertyCaseIndex(propCase) {
             throw ("Unknown format");
     }
 }
+
+function getPropertyCaseFromIndex(index) {
+    switch(index) {
+        case '1':
+            return "none";
+        case '2':
+            return "snake"; 
+        case '3':
+            return "camel";
+        default:
+            throw ("Unknown format");
+    }
+}
+
+function saveOutputAsFile() {
+    const textToWrite = document.getElementById('converterOutput').value;
+    const textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
+    const outputFormat = document.getElementById("outputFormat").value;
+    const fileNameToSaveAs = "output." + outputFormat;
+  
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null) {
+      // Chrome allows the link to be clicked without actually adding it to the DOM.
+      downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    } else {
+      // Firefox requires the link to be added to the DOM before it can be clicked.
+      downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+      downloadLink.onclick = destroyClickedElement;
+      downloadLink.style.display = "none";
+      document.body.appendChild(downloadLink);
+    }
+  
+    downloadLink.click();
+}
+
+function destroyClickedElement(event) {
+    // remove the link from the DOM
+    document.body.removeChild(event.target);
+}
+
+var button = document.getElementById('download-btn');
+button.addEventListener('click', saveOutputAsFile);
+
+const onSaveCheckboxClick = () => {
+    const checkbox = document.getElementById("saveCheckbox");
+    const saveInfo = document.getElementById("saveInfo");
+    if (checkbox.checked) {
+        saveInfo.style.display = "block";
+    } else {
+        saveInfo.style.display = "none";
+    }
+};
 
 populateHistory();

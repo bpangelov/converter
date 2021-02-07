@@ -32,6 +32,7 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Converter</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="css/converter.css">
 </head>
 <body>
@@ -112,16 +113,18 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                         <option value="3">Camel case</option>
                     </select>
                 </div>
-                <label for="configName">Име на конфигурация</label>
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="configName"/>
+                    <label><input type="checkbox" onclick="onSaveCheckboxClick();" class="checkbox" id="saveCheckbox"/> Запази в историята</label>
                 </div>
-                <label for="transformationName">Име на трансформация</label>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="transformationName"/>
-                </div>
-                <div class="input-group mb-3">
-                    <label><input type="checkbox" onclick="saveCheck();" class="checkbox" id="saveCheck"/> Запази в историята</label>
+                <div id="saveInfo">
+                    <label for="configName">Име на конфигурация</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="configName"/>
+                    </div>
+                    <label for="transformationName">Име на трансформация</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="transformationName"/>
+                    </div>
                 </div>
                 <button type="button" class="btn btn-primary mx-auto d-block btn-block" id="convert-btn" onclick="convert()">Конвертиране</button>
                 <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
@@ -131,8 +134,11 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
             </div>
         </div>
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput")); this.value=null'>
+            </div>
+            <div class="col-md-6">
+            <button class="btn" id="download-btn"><i class="fa fa-download"></i>Download</button>
             </div>
         </div>
     </div>

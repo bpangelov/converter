@@ -33,7 +33,7 @@ class YamlParser extends Parser {
     }
 }
 
-class XMLParser extends Parser {
+class XMLCustomParser extends Parser {
 
     public function parse($inputFile) {
         try {
@@ -90,7 +90,7 @@ class ParserFactory {
             case 'yaml':
                 return new YamlParser();
             case 'xml':
-                return new XMLParser();
+                return new XMLCustomParser();
             default:
                 http_response_code(400);
                 exit("Unknown format");

@@ -7,3 +7,20 @@
     max-height: 200px;
     overflow-x: hidden;
 }
+
+#saveInfo {
+    display: none;
+}
+
+#download-btn {
+    background-color: DodgerBlue;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    float: right;
+}
+
+#download-btn:hover {
+    background-color: RoyalBlue;
+}
