@@ -27,7 +27,7 @@ if ($uri[1] == 'api') {
     } else if ($uri[2] == 'configs') {
         $configName = null;
         if (isset($uri[3])) {
-            $configName = (int) $uri[3];
+            $configName = $uri[3];
         }
 
         $controller = new ConfigController($requestMethod, $configName);

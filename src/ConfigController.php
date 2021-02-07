@@ -56,7 +56,8 @@ class ConfigController {
                 exit("Config doesn't exist for user");
             }
         }
-        return $config->getJson();
+        $response['body'] = json_encode($config->getJson());
+        return $response;
     }
 
     public function delete($name) {
@@ -75,6 +76,7 @@ class ConfigController {
             return array();
         }
         $this->configRepo->delete($config->getId());
+        return array();
     }
 }
 

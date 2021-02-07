@@ -55,6 +55,18 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                     </a>
                     <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedDropdown" id="sharedItems"></div>
                 </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="configsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Конфигурации
+                    </a>
+                    <div class="dropdown-menu scrollable-menu" aria-labelledby="configsDropdown" id="configs"></div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="sharedConfigsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Споделени конфигурации
+                    </a>
+                    <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedConfigsDropdown" id="sharedConfigs"></div>
+                </li>
             </ul>
 
             <ul class="navbar-nav ml-auto">
@@ -98,7 +110,17 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                         <option value="3">Camel case</option>
                     </select>
                 </div>
-
+                <label for="configName">Име на конфигурация</label>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="configName"/>
+                </div>
+                <label for="transformationName">Име на трансформация</label>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="transformationName"/>
+                </div>
+                <div class="input-group mb-3">
+                    <label><input type="checkbox" onclick="saveCheck();" class="checkbox" id="saveCheck"/> Запази в историята</label>
+                </div>
                 <button type="button" class="btn btn-primary mx-auto d-block" id="convert-btn" onclick="convert()">Конвертиране</button>
             </div>
             <div class="col-md-5">

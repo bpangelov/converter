@@ -1,23 +1,25 @@
-const API_URL = "http://localhost/converter/api/transformations";
+const API_URL = "http://localhost/converter/api/";
+const TRANSFORMATIONS_URL = API_URL + "transformations";
+const CONFIGS_URL = API_URL + "configs";
 
 const convert = () => {
     const propCaseOption = document.getElementById("propertyCase").value
     const propertyCase = propCaseOption == 1 ? "none" : propCaseOption == 2 ? "snake" : "camel";
     const apiRequest = {
         "config": {
-            "name":         "config name",
+            "name":         document.getElementById("configName").value,
             "inputFormat":  document.getElementById("inputFormat").value,
             "outputFormat": document.getElementById("outputFormat").value,
             "tabulation":   document.getElementById("tabulation").value,
             "propertyCase": propertyCase,
         },
-        "save":             false,
-        "fileName":         "file name",
+        "save":             document.getElementById('saveCheck').checked,
+        "fileName":         document.getElementById("transformationName").value,
         "inputFileContent": document.getElementById("converterInput").value,
         "shareWith":        "",
     };
 
-    fetch(API_URL, {
+    fetch(TRANSFORMATIONS_URL, {
         method: "POST", 
         body: JSON.stringify(apiRequest),
         headers : { 
@@ -28,6 +30,7 @@ const convert = () => {
     .then(response => response.json())
     .then(response => {
         document.getElementById("converterOutput").value = response.convertedFile;
+        populateHistory();
     })
     .catch(err => {
         console.log('Fetch Error :', err);
@@ -35,41 +38,67 @@ const convert = () => {
 }
 
 const populateHistory = () => {
-    fetch(API_URL)
+    fetch(TRANSFORMATIONS_URL)
         .then(response => response.json())
         .then(data => {
             const historyItems = document.getElementById("historyItems");
             historyItems.innerHTML = '';
-
+            const configs = document.getElementById("configs");
+            configs.innerHTML = '';
             data.historyEntries.forEach(entry => {
                 const historyItem = document.createElement('a');
                 historyItem.className = "dropdown-item";
                 historyItem.innerHTML = entry.fileName;
                 historyItem.onclick = () => getTransformation(entry.id);
                 historyItems.appendChild(historyItem);
+
+                const cnf = document.createElement('a');
+                cnf.className = "dropdown-item";
+                cnf.innerHTML = entry.configName;
+                cnf.onclick = () => getConfig(entry.configName);
+                configs.appendChild(cnf);
             });
 
             const sharedItems = document.getElementById("sharedItems");
             sharedItems.innerHTML = '';
-
+            const sharedConfigs = document.getElementById("sharedConfigs");
+            sharedConfigs.innerHTML = '';
             data.sharedEntries.forEach(entry => {
                 const sharedItem = document.createElement('a');
                 sharedItem.className = "dropdown-item";
                 sharedItem.innerHTML = entry.fileName;
                 sharedItem.onclick = () => getTransformation(entry.transformationID);
                 sharedItems.appendChild(sharedItem);
+
+                const cnf = document.createElement('a');
+                cnf.className = "dropdown-item";
+                cnf.innerHTML = entry.configName;
+                cnf.onclick = () => getConfig(entry.configName);
+                sharedConfigs.appendChild(cnf);
             })
         }).catch(function(err) {
             console.log('Fetch Error :', err);
         });
 }
 
+const getConfig = name => {
+    fetch(CONFIGS_URL + "/" + name)
+        .then(response => response.json())
+        .then(config => {
+            assignConfig(config)
+        }).catch(function(err) {
+            console.log('Fetch Error :', err);
+        });
+}
+
 const getTransformation = id => {
-    fetch(API_URL + "/" + id)
+    fetch(TRANSFORMATIONS_URL + "/" + id)
         .then(response => response.json())
         .then(data => {
+            assignConfig(data.config)
             document.getElementById("converterInput").value = data.originalFile;
             document.getElementById("converterOutput").value = data.convertedFile;
+            document.getElementById("transformationName").value = data.fileName;
         }).catch(function(err) {
             console.log('Fetch Error :', err);
         });
@@ -109,6 +138,27 @@ function onChooseFile(event, onLoadFileHandler) {
     let fr = new FileReader();
     fr.onload = onLoadFileHandler;
     fr.readAsText(file);
+}
+
+function assignConfig(config) {
+    document.getElementById("configName").value = config.name
+    document.getElementById("inputFormat").value = config.inputFormat;
+    document.getElementById("outputFormat").value = config.outputFormat;
+    document.getElementById("tabulation").value = config.tabulation;
+    document.getElementById("propertyCase").value = getPropertyCaseIndex(config.propertyCase);
+}
+
+function getPropertyCaseIndex(propCase) {
+    switch (propCase) {
+        case 'none':
+            return 1;
+        case 'snake':
+            return 2;
+        case 'camel':
+            return 3;
+        default:
+            throw ("Unknown format");
+    }
 }
 
 populateHistory();
