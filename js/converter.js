@@ -3,7 +3,7 @@ const TRANSFORMATIONS_URL = API_URL + "transformations";
 const CONFIGS_URL = API_URL + "configs";
 const SHARES_URL = API_URL + "share";
 
-let transformationToShare = null;
+let lastLoadedTransformation = null;
 
 const transformationsApiRequest = () => {
     const propCaseOption = document.getElementById("propertyCase").value
@@ -15,10 +15,9 @@ const transformationsApiRequest = () => {
             "tabulation":   document.getElementById("tabulation").value,
             "propertyCase": getPropertyCaseFromIndex(propCaseOption),
         },
-        "save":             document.getElementById('saveCheckbox').checked,
+        "save":             document.getElementById("saveCheckbox").checked,
         "fileName":         document.getElementById("transformationName").value,
         "inputFileContent": document.getElementById("converterInput").value,
-        "shareWith":        "",
     };
 }
 
@@ -32,10 +31,10 @@ const convert = () => {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => handleConvertResponse(response))
     .then(response => {
         document.getElementById("converterOutput").value = response.convertedFile;
-        transformationToShare = response.id;
+        lastLoadedTransformation = response.id;
         populateHistory();
     })
     .catch(err => {
@@ -53,10 +52,10 @@ const update = () => {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => handleUpdateResponse(response))
     .then(response => {
         document.getElementById("converterOutput").value = response.convertedFile;
-        transformationToShare = response.id;
+        lastLoadedTransformation = response.id;
         populateHistory();
     })
     .catch(err => {
@@ -65,12 +64,12 @@ const update = () => {
 }
 
 const share = () => {
-    if (!transformationToShare) {
+    if (!lastLoadedTransformation) {
         return;
     }
 
     const request = {
-        "transformationID": transformationToShare,
+        "transformationID": lastLoadedTransformation,
         "username": document.getElementById("usernameShare").value
     };
     fetch(SHARES_URL, {
@@ -81,6 +80,7 @@ const share = () => {
             'Accept': 'application/json'
         }
     })
+    .then(response => handleShareResponse(response))
     .catch(err => {
         console.log('Fetch Error :', err);
     });
@@ -98,7 +98,7 @@ function getHistoryEntry(name, getHandler, removeHanler, allowDelete) {
     if (allowDelete) {
         const removeLink = document.createElement('span');
         removeLink.className = "badge";
-        removeLink.innerHTML = "премахване";
+        removeLink.innerHTML = "&#x2715;";
         removeLink.style.color = "red";
         removeLink.onclick = removeHanler;
         historyItem.appendChild(removeLink);
@@ -165,7 +165,7 @@ const getTransformation = id => {
             document.getElementById("converterInput").value = data.originalFile;
             document.getElementById("converterOutput").value = data.convertedFile;
             document.getElementById("transformationName").value = data.fileName;
-            transformationToShare = id;
+            lastLoadedTransformation = id;
         }).catch(function(err) {
             console.log('Fetch Error :', err);
         });
@@ -313,5 +313,73 @@ const onSaveCheckboxClick = () => {
         saveInfo.style.display = "none";
     }
 };
+
+const handleConvertResponse = response => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
+
+    if (response.status == 200 || response.status == 201) {
+        return response.json();
+    }
+
+    alert.style.display = "block";
+
+    if (response.status == 400) {
+        alert.innerText = "Невалиден вход";
+        throw ("Invalid input format");
+    }
+
+    if (response.status == 405) {
+        alert.innerText = "Трансформация с такова име същестува";
+        throw ("Transformation with the given name exists");
+    }
+
+    throw ("Unexpected status code: ", response.status);
+}
+
+const handleUpdateResponse = response => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
+
+    if (response.status == 200 || response.status == 201) {
+        return response.json();
+    }
+
+    alert.style.display = "block";
+
+    if (response.status == 404) {
+        alert.innerText = "Дедената конфигурация или трансформация не съществуват";
+        throw ("Config or transformation doesn't exist");
+    }
+
+    if (response.status == 405) {
+        alert.innerText = "Не могат да се сменя входния или изходния формат при обновяване";
+        throw ("Changing formats is not allowed with this method");
+    }
+
+    throw ("Unexpected status code: ", response.status);
+}
+
+const handleShareResponse = response => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
+
+    if (response.status == 200 || response.status == 201) {
+        return Promise.resolve();
+    }
+
+    alert.style.display = "block";
+    if (response.status == 400 || response.status == 404) {
+        alert.innerText = "Невалидно потребителско име";
+        throw ("Invalid username");
+    }
+
+    if (response.status == 401) {
+        alert.innerText = "Нямате права да споделяте трансформацията";
+        throw ("The current user doesn't own this transformation");
+    }
+
+    throw ("Unexpected status code: ", response.status);
+}
 
 populateHistory();

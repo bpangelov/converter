@@ -24,3 +24,15 @@
 #download-btn:hover {
     background-color: RoyalBlue;
 }
+
+#shareControls {
+    padding-top: 20px;
+}
+
+#updateControls {
+    padding-top: 10px;
+}
+
+#alert {
+    display: none;
+}

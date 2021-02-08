@@ -85,6 +85,11 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
 
     <div class="container-fluid">
         <div class="row">
+            <div class="col">
+                <div class="alert alert-danger" role="alert" id="alert"></div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-5">
                 <textarea class="form-control" rows="25" placeholder="Вход" id="converterInput"></textarea>
             </div>
@@ -134,7 +139,9 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                 </div>
                 <button type="button" class="btn btn-primary mx-auto d-block btn-block" id="convert-btn" onclick="convert()">Конвертиране</button>
                 <?php if ($logged) { ?>
-                    <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
+                    <div id="updateControls">
+                        <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
+                    </div>
                 <?php } ?>
             </div>
             <div class="col-md-5">
@@ -145,11 +152,13 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
             <div class="col-md-2">
                 <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput")); this.value=null'>
                 <?php if ($logged) { ?>
-                    <label for="usernameShare">Сподели трансформация</label>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Потребителско име" id="usernameShare">
-                        <div class="input-group-append">
-                            <button class="btn btn-secondary" type="button" id="share-btn" onclick="share()">Сподели</button>
+                    <div id="shareControls">
+                        <label for="usernameShare">Сподели трансформация</label>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Потребителско име" id="usernameShare">
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary" type="button" id="share-btn" onclick="share()">Сподели</button>
+                            </div>
                         </div>
                     </div>
                 <?php } ?>

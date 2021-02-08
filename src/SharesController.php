@@ -80,7 +80,7 @@ class SharesController {
         $userRepo = new UserRepository($db->getConnection());
         $user = $userRepo->getUser($request->getUsername());
         if (empty($user)) {
-            http_response_code(400);
+            http_response_code(404);
             exit("user doesn't exist");
         }
 
