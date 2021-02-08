@@ -16,7 +16,6 @@ class ApiRequest {
     private $config;
     private $fileName;
     private $inputFileContent;
-    private $shareWith;
     private $save;
 
     public function __construct($data) {
@@ -48,12 +47,6 @@ class ApiRequest {
             http_response_code(400);
             exit("Config is required");
         }
-
-        if (property_exists($data, 'shareWith')) {
-            $this->shareWith = $data->shareWith;
-        } else {
-            $this->shareWith = null;
-        }
     }
 
     public function getConfig() {
@@ -70,10 +63,6 @@ class ApiRequest {
 
     public function saveTransformation() {
         return $this->save;
-    }
-
-    public function getShareWith() {
-        return $this->shareWith;
     }
 }
 
@@ -230,9 +219,6 @@ class ConverterController {
                 http_response_code(405);
                 exit("Modifying transformation is not allowed with this method");
             }
-            if ($requestDto->getShareWith()) {
-                $this->shareTransformation($transformation, $requestDto->getShareWith());
-            }
         }
         
         http_response_code(201);
@@ -302,10 +288,6 @@ class ConverterController {
         FileUtil::overwrite($filePath, $resultConverted);
         FileUtil::overwrite($filePathOriginal, $requestDto->getInputFileContent());
 
-        if ($requestDto->getShareWith()) {
-            $this->shareTransformation($transformation, $requestDto->getShareWith());
-        }
-
         http_response_code(200);
         header('Content-Type: application/json');
         $response['body'] = json_encode(array(
@@ -335,6 +317,11 @@ class ConverterController {
             return array();
         }
 
+        if ($transformation["userId"] != $userID) {
+            http_response_code(401);
+            exit("user doesn't own transformation");
+        }
+
         $fileOriginal = $transformation["inputFileName"];
         $fileConverted = $transformation["outputFileName"];
 
@@ -357,22 +344,6 @@ class ConverterController {
         $conveterFactory = new ConverterFactory();
         $converter = $conveterFactory->createConverter($config);
         return $converter->convert($result);
-    }
-
-    private function shareTransformation($transformation, $userName) {
-        $db = new DB();
-        $userRepo = new UserRepository($db->getConnection());
-        $sharesRepo = new SharesRepository($db->getConnection());
-
-        $user = $userRepo->getUser($userName);
-        if ($user == null || $user == "") {
-            http_response_code(400);
-            exit("user doesn't exist");
-        }
-
-        if ($transformation["userId"] !== $user["id"]) {
-            $sharesRepo->shareTransformation($user["id"], $transformation["id"]);
-        }
     }
 }
 

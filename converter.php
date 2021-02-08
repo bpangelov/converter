@@ -2,7 +2,9 @@
 
 session_start();
 
+$logged = false;
 if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
+    $logged = true;
     $loginControls = '
         <li class="nav-item">
             <p class="navbar-text">' . $_SESSION["username"] . '</p>
@@ -43,32 +45,34 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
         </button>
 
         <div class="collapse navbar-collapse" id="navbarMenu">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="historyDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    История
-                    </a>
-                    <div class="dropdown-menu scrollable-menu" aria-labelledby="historyDropdown" id="historyItems"></div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="sharedDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Споделени
-                    </a>
-                    <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedDropdown" id="sharedItems"></div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="configsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Конфигурации
-                    </a>
-                    <div class="dropdown-menu scrollable-menu" aria-labelledby="configsDropdown" id="configs"></div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="sharedConfigsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Споделени конфигурации
-                    </a>
-                    <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedConfigsDropdown" id="sharedConfigs"></div>
-                </li>
-            </ul>
+            <?php if ($logged) { ?>
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="historyDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        История 
+                        </a>
+                        <div class="dropdown-menu scrollable-menu" aria-labelledby="historyDropdown" id="historyItems"></div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="sharedDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Споделени
+                        </a>
+                        <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedDropdown" id="sharedItems"></div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="configsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Конфигурации
+                        </a>
+                        <div class="dropdown-menu scrollable-menu" aria-labelledby="configsDropdown" id="configs"></div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="sharedConfigsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Споделени конфигурации
+                        </a>
+                        <div class="dropdown-menu scrollable-menu" aria-labelledby="sharedConfigsDropdown" id="sharedConfigs"></div>
+                    </li>
+                </ul>
+            <?php } ?>
 
             <ul class="navbar-nav ml-auto">
                 <?php 
@@ -113,9 +117,11 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                         <option value="3">Camel case</option>
                     </select>
                 </div>
-                <div class="input-group mb-3">
-                    <label><input type="checkbox" onclick="onSaveCheckboxClick();" class="checkbox" id="saveCheckbox"/> Запази в историята</label>
-                </div>
+                <?php if ($logged) { ?>
+                    <div class="input-group mb-3">
+                        <label><input type="checkbox" onclick="onSaveCheckboxClick();" class="checkbox" id="saveCheckbox"/> Запази в историята</label>
+                    </div>
+                <?php } ?>
                 <div id="saveInfo">
                     <label for="configName">Име на конфигурация</label>
                     <div class="input-group mb-3">
@@ -127,7 +133,9 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
                     </div>
                 </div>
                 <button type="button" class="btn btn-primary mx-auto d-block btn-block" id="convert-btn" onclick="convert()">Конвертиране</button>
-                <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
+                <?php if ($logged) { ?>
+                    <button type="button" class="btn btn-warning mx-auto d-block btn-block" id="update-btn" onclick="update()">Обновяване</button>
+                <?php } ?>
             </div>
             <div class="col-md-5">
                 <textarea class="form-control" rows="25" placeholder="Изход" id="converterOutput"></textarea>
@@ -136,13 +144,15 @@ if (isset($_SESSION["logged"]) && $_SESSION["logged"] === true) {
         <div class="row">
             <div class="col-md-2">
                 <input type="file" class="form-control-file" id="inputFile" onchange='onChooseFile(event, onFileLoad.bind(this, "converterInput")); this.value=null'>
-                <label for="usernameShare">Сподели трансформация</label>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Потребителско име" id="usernameShare">
-                    <div class="input-group-append">
-                        <button class="btn btn-secondary" type="button" id="share-btn" onclick="share()">Сподели</button>
+                <?php if ($logged) { ?>
+                    <label for="usernameShare">Сподели трансформация</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Потребителско име" id="usernameShare">
+                        <div class="input-group-append">
+                            <button class="btn btn-secondary" type="button" id="share-btn" onclick="share()">Сподели</button>
+                        </div>
                     </div>
-                </div>
+                <?php } ?>
             </div>
             <div class="col-md">
             <button class="btn" id="download-btn"><i class="fa fa-download"></i>Download</button>
