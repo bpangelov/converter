@@ -71,7 +71,7 @@ const share = () => {
 
     const request = {
         "transformationID": transformationToShare,
-        "userID": document.getElementById("usernameShare").value
+        "username": document.getElementById("usernameShare").value
     };
     fetch(SHARES_URL, {
         method: "POST", 
@@ -80,9 +80,6 @@ const share = () => {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
-    })
-    .then(response => {
-        console.log(response);
     })
     .catch(err => {
         console.log('Fetch Error :', err);

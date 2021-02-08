@@ -3,9 +3,10 @@
 require_once "./src/db.php";
 require_once "./src/repositories/TransformationRepository.php";
 require_once "./src/repositories/SharesRepository.php";
+require_once "./src/repositories/UserRepository.php";
 
 class ApiRequest {
-    private $userID;
+    private $username;
     private $transformationID;
 
     public function __construct($data) {
@@ -13,11 +14,11 @@ class ApiRequest {
     }
 
     private function fromJson($data) {
-        if (property_exists($data, 'userID')) {
-            $this->userID = $data->userID;
+        if (property_exists($data, 'username')) {
+            $this->username = $data->username;
         } else {
             http_response_code(400);
-            exit("User ID required");
+            exit("Username required");
         }
 
         if (property_exists($data, 'transformationID')) {
@@ -33,8 +34,8 @@ class ApiRequest {
         return $this->transformationID;
     }
     
-    public function getUserID() {
-        return $this->userID;
+    public function getUsername() {
+        return $this->username;
     }
 }
 
@@ -65,7 +66,7 @@ class SharesController {
             $userID = $_SESSION["id"];
         } else {
             http_response_code(401);
-            exit();
+            exit("user must be logged in");
         }
         $db = new DB();
         // Check if transformation is owned by the current user.
@@ -73,11 +74,23 @@ class SharesController {
         $transformation = $transformationRepo->getSingle($request->getTransformationID());
         if ($transformation["userId"] != $userID) {
             http_response_code(401);
-            exit();
+            exit("the current user doesn't own this transformation");
+        }
+
+        $userRepo = new UserRepository($db->getConnection());
+        $user = $userRepo->getUser($request->getUsername());
+        if (empty($user)) {
+            http_response_code(400);
+            exit("user doesn't exist");
         }
 
         $sharesRepo = new SharesRepository($db->getConnection());
-        $sharesRepo->shareTransformation($request->getUserID(), $request->getTransformationID());
+        if ($transformation["userId"] !== $user["id"]) {
+            $sharesRepo->shareTransformation($user["id"], $request->getTransformationID());
+        } else {
+            http_response_code(400);
+            exit("invalid user");
+        }
 
         http_response_code(200);
     }
