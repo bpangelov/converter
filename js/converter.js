@@ -64,7 +64,11 @@ const update = () => {
 }
 
 const share = () => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
     if (!lastLoadedTransformation) {
+        alert.style.display = "block";
+        alert.innerText = "Не е избрана трансформация за споделяне";
         return;
     }
 
@@ -97,9 +101,8 @@ function getHistoryEntry(name, getHandler, removeHanler, allowDelete) {
 
     if (allowDelete) {
         const removeLink = document.createElement('span');
-        removeLink.className = "badge";
+        removeLink.className = "deleteIcon";
         removeLink.innerHTML = "&#x2715;";
-        removeLink.style.color = "red";
         removeLink.onclick = removeHanler;
         historyItem.appendChild(removeLink);
     }
@@ -195,9 +198,8 @@ function removeConfig(name) {
     fetch(CONFIGS_URL + "/" + name, {
         method: "DELETE", 
     })
+    .then(response => handleDeleteConfig(response))
     .then(response => {
-        console.log('Item deleted');
-        console.log(response);
         populateHistory();
     })
     .catch(function(err) {
@@ -209,9 +211,8 @@ function removeTransformation(id) {
     fetch(TRANSFORMATIONS_URL + "/" + id, {
         method: "DELETE", 
     })
+    .then(response => handleDeleteTransformation(response))
     .then(response => {
-        console.log('Item deleted');
-        console.log(response);
         populateHistory();
     })
     .catch(function(err) {
@@ -348,7 +349,7 @@ const handleUpdateResponse = response => {
     alert.style.display = "block";
 
     if (response.status == 404) {
-        alert.innerText = "Дедената конфигурация или трансформация не съществуват";
+        alert.innerText = "Конфигурацията или трансформацията не съществуват";
         throw ("Config or transformation doesn't exist");
     }
 
@@ -378,6 +379,48 @@ const handleShareResponse = response => {
         alert.innerText = "Нямате права да споделяте трансформацията";
         throw ("The current user doesn't own this transformation");
     }
+
+    throw ("Unexpected status code: ", response.status);
+}
+
+const handleDeleteTransformation = response => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
+
+    if (response.status == 200 || response.status == 204) {
+        return Promise.resolve();
+    }
+
+    alert.style.display = "block";
+
+    if (response.status == 401) {
+        alert.innerText = "Нямате права да изтриете трансформацията";
+        throw ("The current user doesn't have permissions to delete transformation");
+    }
+
+    throw ("Unexpected status code: ", response.status);
+}
+
+const handleDeleteConfig = response => {
+    const alert = document.getElementById("alert");
+    alert.style.display = "none";
+
+    if (response.status == 200 || response.status == 204) {
+        return Promise.resolve();
+    }
+
+    alert.style.display = "block";
+
+    if (response.status == 401) {
+        alert.innerText = "Нямате права да изтриете конфигурацията";
+        throw ("The current user doesn't have permissions to delete configuration");
+    }
+
+    if (response.status == 409) {
+        alert.innerText = "Конфигурацията се използва и не може да бъде изтрита";
+        throw ("Configuration is still in use and cannot be deleted");
+    }
+
 
     throw ("Unexpected status code: ", response.status);
 }

@@ -36,3 +36,9 @@
 #alert {
     display: none;
 }
+
+.deleteIcon {
+    color: red;
+    float: right;
+    cursor: pointer;
+}
