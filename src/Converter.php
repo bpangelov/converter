@@ -181,16 +181,24 @@ class XMLConverter extends Converter {
         return $str;
     }
 
-    private function arrayToXML($array, $tab, $tabCount, $root = true) {
+    private function arrayToXML($array, $tab, $tabCount, $root = true, $k = "") {
         $result = "";
         if($root) {
             $result = "<root>\n";
         }
+
         foreach($array as $key => $value) {
+
             if(is_array($value)) {
-                $result .= str_repeat($tab, $tabCount) . "<$key>\n" . 
-                            $this->arrayToXML($value, $tab, $tabCount + 1, false) . 
-                            str_repeat($tab, $tabCount) . "</$key>\n";
+                $temp = $this->arrayToXML($value, $tab, $tabCount + 1, false, $key);
+                if (is_numeric($key)) {
+                    $temp = str_repeat($tab, $tabCount - 1) . "<$k>\n" . $temp;
+                    $temp .= str_repeat($tab, $tabCount - 1) . "</$k>\n";
+                } else if (count(array_filter(array_keys($array), 'is_string')) == 0) {
+                    $temp = str_repeat($tab, $tabCount) . "<$key>\n" . $temp;
+                    $temp .= str_repeat($tab, $tabCount) . "</$key>\n";
+                }
+                $result .= $temp;
             } else {
                 $result .= str_repeat($tab, $tabCount) . "<$key>$value</$key>\n";
             }
