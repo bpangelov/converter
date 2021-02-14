@@ -6,7 +6,8 @@ const SHARES_URL = API_URL + "share";
 let lastLoadedTransformation = null;
 
 const transformationsApiRequest = () => {
-    const propCaseOption = document.getElementById("propertyCase").value
+    const propCaseOption = document.getElementById("propertyCase").value;
+    const saveCheckbox = document.getElementById("saveCheckbox");
     return {
         "config": {
             "name":         document.getElementById("configName").value,
@@ -15,7 +16,7 @@ const transformationsApiRequest = () => {
             "tabulation":   document.getElementById("tabulation").value,
             "propertyCase": getPropertyCaseFromIndex(propCaseOption),
         },
-        "save":             document.getElementById("saveCheckbox").checked,
+        "save":             saveCheckbox ? saveCheckbox.checked : false,
         "fileName":         document.getElementById("transformationName").value,
         "inputFileContent": document.getElementById("converterInput").value,
     };
