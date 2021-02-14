@@ -9,8 +9,9 @@ require_once "./src/repositories/UserRepository.php";
 require_once "./src/repositories/ConfigRepository.php";
 require_once "./src/repositories/TransformationRepository.php";
 require_once "./src/repositories/SharesRepository.php";
+require_once "./config.php";
 
-define("FILE_PATH", "./files/");
+define("FILE_PATH", ServerConfig::$FILE_PATH);
 
 class ApiRequest {
     private $config;

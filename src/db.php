@@ -1,12 +1,15 @@
 <?php
+
+require_once "./config.php";
+
 class DB {
     private $connection;
 
     public function __construct() {
-        $dbhost = "localhost";
-        $dbName = "converter";
-        $userName = "root";
-        $userPassword = "";
+        $dbhost = ServerConfig::$DB_HOST;
+        $dbName = ServerConfig::$DB_NAME;
+        $userName = ServerConfig::$DB_USER;
+        $userPassword = ServerConfig::$DB_PASS;
 
         $this->connection = new PDO("mysql:host=$dbhost;dbname=$dbName", $userName, $userPassword,
             [

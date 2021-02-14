@@ -1,4 +1,4 @@
-const API_URL = "http://localhost/converter/api/";
+const API_URL = "http://" + window.location.host + "/converter/api/";
 const TRANSFORMATIONS_URL = API_URL + "transformations";
 const CONFIGS_URL = API_URL + "configs";
 const SHARES_URL = API_URL + "share";
