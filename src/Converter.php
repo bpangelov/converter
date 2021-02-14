@@ -14,7 +14,7 @@ function camelToSnake($camel) {
 
 function snakeToCamel($snake) {
     $snake = preg_replace_callback('/_[a-z0-9]/', function ($match){
-        return strtoupper($match[1]);
+        return strtoupper($match[0][1]);
     }, $snake);
     return $snake;
 }
@@ -144,7 +144,19 @@ class YamlConverter extends Converter {
             } else if ($tabulationPrev > $currentTabs) {
                 $tabulationCount--;
             }
-            $result .= str_repeat($tabulation, $tabulationCount) . $trimmed . "\n";
+
+            // Handle yaml array
+            if (preg_match('/- [\w]+/', $trimmed)) {
+                $temp = ($tabulationCount + 1) * $this->config->getTabulation() - 2;
+                if ($temp > 0) {
+                    $result .= str_repeat(" ", $temp) . $trimmed . "\n";
+                } else {
+                    $result .= $trimmed . "\n";
+                }
+            } else {
+                $result .= str_repeat($tabulation, $tabulationCount) . $trimmed . "\n";
+            }
+            
             $tabulationPrev = $currentTabs;
         }
         return $result;
