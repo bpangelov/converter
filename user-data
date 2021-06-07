@@ -1,0 +1,11 @@
+#!/bin/bash
+yum update -y
+yum install -y git
+yum install -y docker
+service docker start
+git clone https://github.com/bpangelov/converter /usr/converter
+cd /usr/converter
+mkdir files
+chmod 0777 files
+docker build -t converter-app .
+docker run -tid -p 80:80 --name converter -v /usr/converter:/var/www/html converter-app
