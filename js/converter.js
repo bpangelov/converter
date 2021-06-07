@@ -1,4 +1,4 @@
-const API_URL = "http://" + window.location.host + "/converter/api/";
+const API_URL = "http://" + window.location.host + "/index.php?target=";
 const TRANSFORMATIONS_URL = API_URL + "transformations";
 const CONFIGS_URL = API_URL + "configs";
 const SHARES_URL = API_URL + "share";
@@ -152,7 +152,7 @@ const populateHistory = () => {
 }
 
 const getConfig = name => {
-    fetch(CONFIGS_URL + "/" + name)
+    fetch(CONFIGS_URL + "&configName=" + name)
         .then(response => response.json())
         .then(config => {
             assignConfig(config)
@@ -162,7 +162,7 @@ const getConfig = name => {
 }
 
 const getTransformation = id => {
-    fetch(TRANSFORMATIONS_URL + "/" + id)
+    fetch(TRANSFORMATIONS_URL + "&id=" + id)
         .then(response => response.json())
         .then(data => {
             assignConfig(data.config)
@@ -196,7 +196,7 @@ textBoxes.forEach(textBox => {
 });
 
 function removeConfig(name) {
-    fetch(CONFIGS_URL + "/" + name, {
+    fetch(CONFIGS_URL + "&configName=" + name, {
         method: "DELETE", 
     })
     .then(response => handleDeleteConfig(response))
@@ -209,7 +209,7 @@ function removeConfig(name) {
 }
 
 function removeTransformation(id) {
-    fetch(TRANSFORMATIONS_URL + "/" + id, {
+    fetch(TRANSFORMATIONS_URL + "&id=" + id, {
         method: "DELETE", 
     })
     .then(response => handleDeleteTransformation(response))

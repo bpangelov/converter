@@ -1,7 +1,7 @@
 <?php
 
-require_once "Parser.php";
-require_once "Converter.php";
+require_once "./src/Parser.php";
+require_once "./src/Converter.php";
 require_once "./src/dtos/Config.php";
 require_once "./src/db.php";
 require_once "./src/FileUtil.php";
