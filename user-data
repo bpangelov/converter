@@ -5,6 +5,7 @@ yum install -y docker
 service docker start
 git clone https://github.com/bpangelov/converter /usr/converter
 cd /usr/converter
+sed -i 's/$S3_BUCKET = "<s3_bucket_name>"/$S3_BUCKET = "<name_of_bucket>"/g' config.php
 mkdir files
 chmod 0777 files
 docker build -t converter-app .

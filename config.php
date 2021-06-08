@@ -7,6 +7,8 @@ class ServerConfig {
     public static $DB_PASS = "";
 
     public static $FILE_PATH = "./files/";
+
+    public static $S3_BUCKET = "<s3_bucket_name>";
 }
 
 ?>
