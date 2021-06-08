@@ -8,9 +8,6 @@ RUN pecl install yaml && echo "extension=yaml.so" > /usr/local/etc/php/conf.d/ex
 
 # Install AWS sdk
 RUN apt-get -y install git
-RUN cd /usr
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-RUN php composer-setup.php
-RUN mv composer.phar /usr/local/bin/composer
-RUN cd /var/www/html/
-RUN composer require aws/aws-sdk-php
+RUN php composer-setup.php && mv composer.phar /usr/local/bin/composer
+RUN cd /var/www/html/ && composer require aws/aws-sdk-php
