@@ -1,2 +1,5 @@
 /files/
+vendor
+composer.json
+composer.lock
 err_log.log
