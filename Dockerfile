@@ -6,8 +6,5 @@ RUN apt-get update -y
 RUN apt-get install libyaml-dev -y
 RUN pecl install yaml && echo "extension=yaml.so" > /usr/local/etc/php/conf.d/ext-yaml.ini && docker-php-ext-enable yaml
 
-# Install AWS sdk
+# Install git
 RUN apt-get -y install git
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-RUN php composer-setup.php && mv composer.phar /usr/local/bin/composer
-RUN cd /var/www/html/ && composer require aws/aws-sdk-php
