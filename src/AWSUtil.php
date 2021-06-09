@@ -64,6 +64,22 @@ class S3Endpoint {
             exit($error->getMessage());
         }
     }
+
+    public function delete($fileName) {
+        try {
+            if (!isset($this->client)) {
+                $this->initClient();
+            }
+            // Delete the object.
+            $result = $this->client->deleteObject([
+                'Bucket' => $this->bucketName,
+                'Key' => $fileName
+            ]);
+        } catch (AwsException $error) {
+            http_response_code(500);
+            exit($error->getMessage());
+        }
+    }
 }
 
 ?>

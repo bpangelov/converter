@@ -325,8 +325,8 @@ class ConverterController {
         $transformationRepo->delete($id);
 
         // Delete files
-        unlink(FILE_PATH . $fileOriginal);
-        unlink(FILE_PATH . $fileConverted);
+        $this->deleteFile($fileOriginal);
+        $this->deleteFile($fileConverted);
 
         http_response_code(204);
         return array();
@@ -371,6 +371,20 @@ class ConverterController {
         } else {
             $path = FILE_PATH . $name;
             return FileUtil::read($path);
+        }
+    }
+
+    private function deleteFile($name) {
+        if (ServerConfig::$IS_AWS_DELPOYMENT) {
+            $s3Endpoint = new S3Endpoint([
+                'region' => ServerConfig::$REGION,
+                'version' => 'latest'
+            ], ServerConfig::$S3_BUCKET);
+
+            $s3Endpoint->delete($name);
+        } else {
+            $path = FILE_PATH . $name;
+            unlink(FILE_PATH . $path);
         }
     }
 }

@@ -10,7 +10,7 @@ class ServerConfig {
     public static $FILE_PATH = "./files/";
 
     public static $IS_AWS_DELPOYMENT = false;
-    public static $S3_BUCKET = "<name_of_bucket>";
+    public static $S3_BUCKET = "<s3_bucket_name>";
     public static $REGION = "us-east-1";
 }
 

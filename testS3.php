@@ -30,7 +30,7 @@ $filePath = './example_data/example_json.json';
 $fileName = 'example_json.json';
 
 // Set up
-$s3Endpoint = new S3Endpoint($sharedConfig, $bucketName);
+$s3Endpoint = new S3Endpoint($baseConfig, $bucketName);
 $s3Endpoint->initClient();
 
 // Upload
@@ -42,4 +42,5 @@ $result = $s3Endpoint->download($fileName);
 // Print the body of the result by indexing into the result object.
 echo $result;
 
+$result = $s3Endpoint->delete($fileName);
 ?>
