@@ -5,6 +5,7 @@ require_once "./src/Converter.php";
 require_once "./src/dtos/Config.php";
 require_once "./src/db.php";
 require_once "./src/FileUtil.php";
+require_once "./src/AWSUtil.php";
 require_once "./src/repositories/UserRepository.php";
 require_once "./src/repositories/ConfigRepository.php";
 require_once "./src/repositories/TransformationRepository.php";
@@ -131,8 +132,8 @@ class ConverterController {
         $config = $configRepo->getSingle($historyEntry["configId"]);
 
         // Read original and converted files
-        $originalContent = FileUtil::read(FILE_PATH . $historyEntry["inputFileName"]);
-        $convertedContent = FileUtil::read(FILE_PATH . $historyEntry["outputFileName"]);
+        $originalContent = $this->readFile($historyEntry["inputFileName"]);
+        $convertedContent = $this->readFile($historyEntry["outputFileName"]);
 
         http_response_code(200);
         header('Content-Type: application/json');
@@ -211,11 +212,8 @@ class ConverterController {
 
                 $id = $transformationRepo->save($userID, $config, $requestDto->getFileName(), $outputFileName, $inputFileName);
 
-                $filePath = FILE_PATH . $outputFileName;
-                $filePathOriginal = FILE_PATH . $inputFileName;
-
-                FileUtil::write($filePath, $resultBody);
-                FileUtil::write($filePathOriginal, $requestDto->getInputFileContent());
+                $this->writeFile($outputFileName, $resultBody);
+                $this->writeFile($inputFileName, $requestDto->getInputFileContent());
             } else {
                 http_response_code(405);
                 exit("Modifying transformation is not allowed with this method");
@@ -283,11 +281,8 @@ class ConverterController {
                             $config->getId() . "." . 
                             $config->getOutputFormat();
 
-        $filePath = FILE_PATH . $outputFileName;
-        $filePathOriginal = FILE_PATH . $inputFileName;
-
-        FileUtil::overwrite($filePath, $resultConverted);
-        FileUtil::overwrite($filePathOriginal, $requestDto->getInputFileContent());
+        $this->writeFile($outputFileName, $resultConverted);
+        $this->writeFile($inputFileName, $requestDto->getInputFileContent(), true);
 
         http_response_code(200);
         header('Content-Type: application/json');
@@ -345,6 +340,38 @@ class ConverterController {
         $conveterFactory = new ConverterFactory();
         $converter = $conveterFactory->createConverter($config);
         return $converter->convert($result);
+    }
+
+    private function writeFile($name, $content, $overWrite = false) {
+        if (ServerConfig::$IS_AWS_DELPOYMENT) {
+            $s3Endpoint = new S3Endpoint([
+                'region' => ServerConfig::$REGION,
+                'version' => 'latest'
+            ], ServerConfig::$S3_BUCKET);
+
+            $s3Endpoint->upload($name, $content);
+        } else {
+            $path = FILE_PATH . $name;
+            if ($overWrite) {
+                FileUtil::overwrite($path, $content);
+            } else {
+                FileUtil::write($path, $content);
+            }
+        }
+    }
+
+    private function readFile($name) {
+        if (ServerConfig::$IS_AWS_DELPOYMENT) {
+            $s3Endpoint = new S3Endpoint([
+                'region' => ServerConfig::$REGION,
+                'version' => 'latest'
+            ], ServerConfig::$S3_BUCKET);
+
+            return $s3Endpoint->download($name);
+        } else {
+            $path = FILE_PATH . $name;
+            return FileUtil::read($path);
+        }
     }
 }
 

@@ -47,13 +47,22 @@ class S3Endpoint {
         }
     }
 
-    public function downLoadObject($fileName) {
-        // Download the contents of the object.
-        $result = $this->client->getObject([
-            'Bucket' => $this->bucketName,
-            'Key' => $fileName
-        ]);
-        return $result['Body'];
+    public function download($fileName) {
+        try {
+            if (!isset($this->client)) {
+                $this->initClient();
+            }
+            // Download the contents of the object.
+            $result = $this->client->getObject([
+                'Bucket' => $this->bucketName,
+                'Key' => $fileName
+            ]);
+
+            return (string) $result['Body'];
+        } catch (AwsException $error) {
+            http_response_code(500);
+            exit($error->getMessage());
+        }
     }
 }
 

@@ -37,5 +37,16 @@
         "Interdimensional travel"
       ]
     }
+	{
+      "name": "Eternal Flame 2",
+      "age": 10000,
+      "secretIdentity": "Unknown",
+      "powers": [
+        "Immortality",
+        "Heat Immunity",
+        "Inferno",
+        "Teleportation"
+      ]
+    }
   ]
 }

@@ -6,6 +6,10 @@ service docker start
 git clone https://github.com/bpangelov/converter /usr/converter
 cd /usr/converter
 sed -i 's/$S3_BUCKET = "<s3_bucket_name>"/$S3_BUCKET = "<name_of_bucket>"/g' config.php
+sed -i 's/$DB_USER = "root"/$DB_USER = "admin"/g' config.php
+sed -i 's/$DB_PASS = ""/$DB_PASS = "password"/g' config.php
+sed -i 's/$DB_HOST = "localhost"/$DB_HOST = "<rds_host>"/g' config.php
+sed -i 's/$IS_AWS_DELPOYMENT = false/$IS_AWS_DELPOYMENT = true/g' config.php
 mkdir files
 chmod 0777 files
 docker build -t converter-app .
@@ -14,3 +18,4 @@ docker exec converter php -r "copy('https://getcomposer.org/installer', 'compose
 docker exec converter php composer-setup.php
 docker exec converter mv composer.phar /usr/local/bin/composer
 docker exec -w /var/www/html converter composer require aws/aws-sdk-php
+docker exec converter php ./db_scripts/setup_database.php

@@ -3,6 +3,7 @@
 require "./vendor/autoload.php";
 require_once "./src/FileUtil.php";
 require_once "./src/AWSUtil.php";
+require_once "./config.php";
 
 use Aws\S3\S3Client;
 
@@ -24,19 +25,19 @@ $sharedConfig = [
       )
 ];
 
-$bucketName = 'converter-bucket-bpa';
+$bucketName = ServerConfig::$S3_BUCKET;
 $filePath = './example_data/example_json.json';
 $fileName = 'example_json.json';
 
 // Set up
-$s3Endpoint = new S3Endpoint($baseConfig, $bucketName);
+$s3Endpoint = new S3Endpoint($sharedConfig, $bucketName);
 $s3Endpoint->initClient();
 
 // Upload
 $content = FileUtil::read($filePath);
 $s3Endpoint->upload($fileName, $content);
 
-$result = $s3Endpoint->downLoadObject($fileName);
+$result = $s3Endpoint->download($fileName);
 
 // Print the body of the result by indexing into the result object.
 echo $result;
