@@ -1,32 +1,10 @@
-import logging
 import boto3
-import json
-from botocore.exceptions import ClientError
+import uuid
 
 def create_bucket(bucket_name, region=None):
-    """Create an S3 bucket in a specified region
-
-    If a region is not specified, the bucket is created in the S3 default
-    region (us-east-1).
-
-    :param bucket_name: Bucket to create
-    :param region: String region to create bucket in, e.g., 'us-west-2'
-    :return: True if bucket created, else False
-    """
-
-    try:
-        if region is None:
-            s3_client = boto3.client('s3')
-            s3_client.create_bucket(Bucket=bucket_name)
-        else:
-            s3_client = boto3.client('s3', region_name=region)
-            location = {'LocationConstraint': region}
-            s3_client.create_bucket(Bucket=bucket_name,
-                                    CreateBucketConfiguration=location)
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
+    s3_client = boto3.client('s3')
+    bucket = s3_client.create_bucket(Bucket=bucket_name)
+    return bucket
 
 
 def create_rds_database(db_engine, master_username, master_password):
@@ -76,5 +54,54 @@ def createa_iam_role():
     )
 
 
+def create_security_group(id):
+    ec2 = boto3.client('ec2')
+    
+    response = ec2.create_security_group(GroupName='security-group-' + id, 
+                                        Description='Security group for automatically deployed ec2 instances')
+    security_group_id = response['GroupId']
+
+    data = ec2.authorize_security_group_ingress(
+        GroupId=security_group_id,
+        IpPermissions=[
+            {'IpProtocol': 'tcp',
+             'FromPort': 80,
+             'ToPort': 80,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+            {'IpProtocol': 'tcp',
+             'FromPort': 22,
+             'ToPort': 22,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]}
+        ])
+    print('Ingress Successfully Set %s' % data)
+
+
+def create_ec2_instance(id):
+    ec2 = boto3.resource('ec2')
+
+    key_name = 'ec2-keypair-' + id + '.pem'
+    # create a file to store the key locally
+    with open(key_name, 'w') as key_file:
+        # call the boto ec2 function to create a key pair
+        key_pair = ec2.create_key_pair(KeyName=key_name)
+
+        # capture the key and store it in a file
+        KeyPairOut = str(key_pair.key_material)
+        key_file.write(KeyPairOut)
+
+    with open("../user-data", "r") as user_data_file:
+        user_data = user_data_file.read()
+
+    ec2.create_instances(
+        ImageId='ami-0aeeebd8d2ab47354',
+        MinCount=1,
+        MaxCount=1,
+        InstanceType='t2.micro',
+        KeyName=key_name,
+        UserData=user_data
+    )
+
+
 if __name__ == "__main__":
-    createa_iam_role()
+    id = str(uuid.uuid4())
+    create_security_group(id)
