@@ -44,7 +44,7 @@ def await_rds_host(db_name):
         resp = rds_client.describe_db_instances(DBInstanceIdentifier=db_name)
         if 'DBInstances' in resp and len(resp['DBInstances']) > 0 and 'Endpoint' in resp['DBInstances'][0]:
             endpoint = resp['DBInstances'][0]['Endpoint']
-            return endpoint['Address'] + ":" + endpoint['Port']
+            return str(endpoint['Address']) + ":" + str(endpoint['Port'])
 
         time.sleep(5)
 
